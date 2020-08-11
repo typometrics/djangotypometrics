@@ -2,9 +2,11 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from django.contrib.auth.models import User, Group
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from algodraftapp.serializers import UserSerializer, GroupSerializer
+from algodraftapp.algodraft import algodraft
+
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
@@ -38,13 +40,22 @@ def dddraft(request):
         # 
         # queryset = Group.objects.all()
         # serializer_class = GroupSerializer
-        # return Response(serializer.data)
-        return Response({'hello':request.data})
+        # return Response(serializer.data) request.query_params['qsdf']
+        print(123123,request.query_params, request.user)
+        response = Response({'hello':str(request.user)})
+        # response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
     elif request.method == 'POST':
-        # return Response({'nihao':'world'})
-        print(request.data["qsdf"])
-        return Response(request.data)
+        # return Response({'nihao':'world'}) request.data["qsdf"],
+        print(456456,request, request.user, request.data)
+        claimstext = request.data.get('claimstext','')
+        if claimstext:
+            r = algodraft(claimstext)
+            # print(5555,r)
+            return Response({'descriptionhtml':r}     )
+        else:
+            return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
         # serializer = SnippetSerializer(data=request.data)
         # if serializer.is_valid():
         #     serializer.save()
