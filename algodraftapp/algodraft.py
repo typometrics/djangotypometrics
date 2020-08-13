@@ -1,5 +1,6 @@
 import re, string, requests, os, glob
 from collections import Counter
+from pathlib import Path
 from algodraftapp.patent import nums2claims
 from algodraftapp.claimin import analyzeClaim, makeClaimAnalysis, cleanupNewlines, suppressBadChars
 #from docx import Document
@@ -256,6 +257,8 @@ def algodraft(claimstext):
 	#return
 	#print(cleanupNewlines(theclaims.split('\n')))
 	#print((theclaims))
+	
+	Path(os.path.join('algodraftapp','errorlog')).mkdir(parents=True, exist_ok=True)
 	errorfile = 	os.path.join('algodraftapp','errorlog',rews.sub('_',theclaims[:20])+'.reference.errors.txt')	
 	error, individualClaims, claimsOrig = makeClaimAnalysis(theclaims, numbered=False, readable=True, skipReferenceErrors=errorfile)
 	
