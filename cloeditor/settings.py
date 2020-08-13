@@ -25,7 +25,7 @@ SECRET_KEY = '+&%$b=tpzka__2s8k5n5kyg@ifp@)a@n!l)707^n0h8vpyvlp^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['cloeditor.elizia.net', 'localhost']
 
 
 # Application definition

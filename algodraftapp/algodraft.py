@@ -57,20 +57,33 @@ def searchpatents(q):
 	#return response
 	goodurl = ''
 	for countrycode in ['US','CA','EP']:
-		if goodurl: break
-		for it in response["items"]:
-			#print(it)
-			if it["formattedUrl"].split('google.com/patents/')[1].startswith(countrycode):
-				#import pprint
-				#pp = pprint.PrettyPrinter(depth=4)
-				#pp.pprint(it)
-				print(22222222222222,it)
-				goodurl = it["formattedUrl"]
-				description = it['pagemap']['metatags'][0]["dc.description"]
-				print(33333,it['pagemap']['metatags'])
-				citation_patent_number = it['pagemap']['metatags'][0].get("citation_patent_number", it['pagemap']['metatags'][0]['citation_patent_application_number'])
-				
-				break
+		if goodurl: break	
+		if 'items' in response:
+		
+			for it in response["items"]:
+				#print(it)
+				if it["formattedUrl"].split('google.com/patents/')[1].startswith(countrycode):
+					#import pprint
+					#pp = pprint.PrettyPrinter(depth=4)
+					#pp.pprint(it)
+					print(22222222222222,it)
+					goodurl = it["formattedUrl"]
+					description = it['pagemap']['metatags'][0]["dc.description"]
+					print(33333,it['pagemap']['metatags'])
+					citation_patent_number = it['pagemap']['metatags'][0].get("citation_patent_number", it['pagemap']['metatags'][0]['citation_patent_application_number'])
+					
+					break
+		else:
+			#print('******',response)
+			#print('******',response.get('searchInformation',{}).get('totalResults',-1))
+			if int(response.get('searchInformation',{}).get('totalResults',-1))==0:
+				print('===no results')
+				simpleq = ' '.join([w for w in q.split() if wordnet.synsets(w)])
+				if simpleq == q:
+					return('https://??','no description','0')
+				else:
+					goodurl, description, citation_patent_number=searchpatents(simpleq)
+			#
 
 	gudeci = '\n\n'.join([goodurl, renl.sub('\n',description), citation_patent_number])
 	open(queryfilename, 'w').write(gudeci)
@@ -270,7 +283,10 @@ def algodraft(claimstext):
 	
 		#return
 		#print(firstclaim)
-		methodsystem = remethsys.search(firstclaim)[0]	
+		try:
+			methodsystem = remethsys.search(firstclaim)[0]	
+		except:
+			methodsystem="method"
 		m = reStepTrigger.search(firstclaim) # re.compile(r"comprises|comprising|includes|including|wherein|in which|whereby|configured to", re.I+re.U)
 		
 		if m:
