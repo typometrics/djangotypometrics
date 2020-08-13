@@ -2,3 +2,5 @@ db.sqlite3
 cloeditorenv/
 uwsgi.log
 uwsgi_serv.pid
+algodraftapp/errorlog/
+cloeditor/__pycache__/
