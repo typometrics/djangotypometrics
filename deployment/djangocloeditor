@@ -1,20 +1,78 @@
 # nginx conf
 # to put into /etc/nginx/sites-available/ for example into the "default" file. put link into /etc/nginx/sites-enabled/ !
+
+
+# the upstream component nginx needs to connect to
+upstream django {
+    # server unix:///path/to/your/mysite/mysite.sock; # for a file socket
+    server 127.0.0.1:8001; # for a web port socket (we'll use this first)
+}
+
+# backend on port 8000
 server {
-	listen 2830 ssl;
-	listen [::]:2830 ssl;
+
+    server_name cloeditor.elizia.net;     # the domain name it will serve for. substitute your machine's IP address or FQDN
+    listen      8000 ssl; # the port your site will be served on
+    ssl_certificate /etc/letsencrypt/live/cloeditor.elizia.net/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/cloeditor.elizia.net/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+    charset     utf-8;
+    client_max_body_size 75M;   # max upload size, adjust to taste
+
+    # Django media - not needed if only rest
+	#     location /media  {
+	#         alias /path/to/your/mysite/media;  # your Django project's media files - amend as required
+	#     }
+	# 
+	#     location /static {
+	#         alias /path/to/your/mysite/static; # your Django project's static files - amend as required
+	#     }
+
+    # Finally, send all non-media requests to the Django server.
+    location / {
+        uwsgi_pass  django;
+        uwsgi_read_timeout 120s;
+		uwsgi_send_timeout 120s;
+        include     /home/cloeditor/djangocloeditor/uwsgi_params; # the uwsgi_params file you installed
+                       
+		#         add_header 'Access-Control-Allow-Origin' '*';
+		#         add_header 'Access-Control-Allow-Credentials' 'true';
+		#         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+		#         add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+
+	}
+}
+
+# frontend
+server {
 
 	server_name cloeditor.elizia.net;
-	ssl_certificate /etc/letsencrypt/live/cloeditor.elizia.net/fullchain.pem; # managed by Certbot
-	ssl_certificate_key /etc/letsencrypt/live/cloeditor.elizia.net/privkey.pem; # managed by Certbot
-	add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+	root /home/cloeditor/quasarcloeditor/dist/spa;
+	listen [::]:443 ssl; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/cloeditor.elizia.net/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/cloeditor.elizia.net/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
 	location / {
-		proxy_pass         "http://localhost:8000";
-		proxy_redirect     off;
-		proxy_set_header   Host $host;
-		proxy_set_header   X-Real-IP $remote_addr;
-		fastcgi_read_timeout 300s;
-		proxy_read_timeout 300;
+		try_files $uri $uri/ =404;
 	}
+
+    
+}
+
+
+server {
+    if ($host = cloeditor.elizia.net) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+	listen 80;
+	listen [::]:80;
+
+	server_name cloeditor.elizia.net;
+    return 404; # managed by Certbot
+
 }

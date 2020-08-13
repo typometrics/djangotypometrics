@@ -3,4 +3,5 @@ cloeditorenv/
 uwsgi.log
 uwsgi_serv.pid
 algodraftapp/errorlog/
+algodraftapp/__pycache__/
 cloeditor/__pycache__/
