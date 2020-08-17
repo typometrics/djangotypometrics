@@ -1,7 +1,7 @@
 db.sqlite3
-cloeditorenv/
+djangotypoenv/
 uwsgi.log
 uwsgi_serv.pid
-algodraftapp/errorlog/
-algodraftapp/__pycache__/
-cloeditor/__pycache__/
+typometricsapp/errorlog/
+typometricsapp/__pycache__/
+djangotypo/__pycache__/

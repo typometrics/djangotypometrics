@@ -1,4 +1,4 @@
-"""cloeditor URL Configuration
+"""djangotypo URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.0/topics/http/urls/
@@ -17,8 +17,8 @@ from django.contrib import admin
 from django.urls import include, path
 
 from rest_framework import routers
-from algodraftapp import views
-import algodraftapp
+from typometricsapp import views
+import typometricsapp
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
@@ -28,8 +28,8 @@ router.register(r'groups', views.GroupViewSet)
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     # path('', include(router.urls)),
-    # path('', include(algodraftapp.urls)),
-    path('algodraftapp/', include('algodraftapp.urls')),
+    # path('', include(typometricsapp.urls)),
+    path('typometricsapp/', include('typometricsapp.urls')),
     # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
 	    # path('polls/', include('polls.urls')),

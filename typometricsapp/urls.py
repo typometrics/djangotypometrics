@@ -4,6 +4,8 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-	path('draft/', views.dddraft),
+	path('typo/', views.typo),
+	path('typoptions/', views.typoptions),
+	path('types/', views.types),
 	url(r'^api-auth/', include('rest_framework.urls'))
 ]

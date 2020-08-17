@@ -1,8 +1,8 @@
 import re, string, requests, os, glob
 from collections import Counter
 from pathlib import Path
-from algodraftapp.patent import nums2claims
-from algodraftapp.claimin import analyzeClaim, makeClaimAnalysis, cleanupNewlines, suppressBadChars
+from typometricsapp.patent import nums2claims
+from typometricsapp.claimin import analyzeClaim, makeClaimAnalysis, cleanupNewlines, suppressBadChars
 #from docx import Document
 #from docx.shared import Cm, RGBColor
 
@@ -28,7 +28,7 @@ reNumberstart	=	re.compile(r"^(\d+)[\.\)]")
 
 def searchpatents(q):
 
-	queryfilename = os.path.join('algodraftapp','patentsearches',rews.sub('_',' '.join(q.split()[:8]))+'_'+sha512(q.encode('utf-8')).hexdigest()+'.txt')
+	queryfilename = os.path.join('typometricsapp','patentsearches',rews.sub('_',' '.join(q.split()[:8]))+'_'+sha512(q.encode('utf-8')).hexdigest()+'.txt')
 	if os.path.exists(queryfilename):
 		gudeci = open(queryfilename).read()
 		goodurl, description, citation_patent_number = gudeci.split('\n\n')
@@ -258,8 +258,8 @@ def algodraft(claimstext):
 	#print(cleanupNewlines(theclaims.split('\n')))
 	#print((theclaims))
 	
-	Path(os.path.join('algodraftapp','errorlog')).mkdir(parents=True, exist_ok=True)
-	errorfile = 	os.path.join('algodraftapp','errorlog',rews.sub('_',theclaims[:20])+'.reference.errors.txt')	
+	Path(os.path.join('typometricsapp','errorlog')).mkdir(parents=True, exist_ok=True)
+	errorfile = 	os.path.join('typometricsapp','errorlog',rews.sub('_',theclaims[:20])+'.reference.errors.txt')	
 	error, individualClaims, claimsOrig = makeClaimAnalysis(theclaims, numbered=False, readable=True, skipReferenceErrors=errorfile)
 	
 	
