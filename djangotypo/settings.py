@@ -25,7 +25,7 @@ SECRET_KEY = '+&%$b=tpzka__2s8k5n5kyg@ifp@)a@n!l)707^n0h8vpyvlp^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['typometrics.elizia.net', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['typometrics.elizia.net', 'localhost', '127.0.0.1', 'tyopmetrics.github.io']
 
 
 # Application definition
