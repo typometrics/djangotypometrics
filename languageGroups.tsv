@@ -17,6 +17,10 @@ NorthSami	Agglutinating
 SkoltSami	Agglutinating
 Turkish	Agglutinating
 Uyghur	Agglutinating
+TurkishGerman	Agglutinating
+OldTurkish	Agglutinating
+Chukot	Agglutinating
+Apurinã	Arawakan
 Tamil	Dravidian
 Telugu	Dravidian
 Albanian	Indo-European
@@ -35,6 +39,10 @@ Persian	Indo-European
 Sanskrit	Indo-European
 Urdu	Indo-European
 Welsh	Indo-European
+Manx	Indo-European
+Nayini	Indo-European
+Soi	Indo-European
+Khunsari	Indo-European
 Belarusian	Indo-European-Baltoslavic
 Bulgarian	Indo-European-Baltoslavic
 Croatian	Indo-European-Baltoslavic
@@ -73,7 +81,7 @@ Portuguese	Indo-European-Romance
 Romanian	Indo-European-Romance
 Spanish	Indo-European-Romance
 Basque	isolate
-Warlpiri	isolate
+Warlpiri	Pama–Nyungan
 Bambara	Niger-Congo
 Wolof	Niger-Congo
 Yoruba	Niger-Congo
@@ -82,6 +90,7 @@ Arabic	Semitic
 Assyrian	Semitic
 Hebrew	Semitic
 Maltese	Semitic
+SouthLevantineArabic	Semitic
 Cantonese	Sino-Austronesian
 Chinese	Sino-Austronesian
 ClassicalChinese	Sino-Austronesian
@@ -90,3 +99,6 @@ Tagalog	Sino-Austronesian
 Thai	Sino-Austronesian
 Vietnamese	Sino-Austronesian
 MbyáGuaraní	Tupian
+Mundurukú	Tupian
+Tupinambá	Tupian
+Akuntsu	Tupian

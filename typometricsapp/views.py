@@ -52,11 +52,17 @@ def typo(request):
         xty = request.data.get('xtype','')
         yty = request.data.get('ytype','')
         if xty:
-            jsondata = tsv2json(
-                xty, request.data.get('x',''),
-                yty, request.data.get('y',''))
+            jsondata, nblang, xymin, xymax = tsv2json(
+                xty, 
+                request.data.get('x', ''), 
+                request.data.get('xminocc', 0),
+
+                yty, 
+                request.data.get('y',''),
+                request.data.get('yminocc', 0)
+                )
             # print(5555,r)
-            return Response({'chartdata':jsondata}     )
+            return Response({'chartdata': jsondata, 'nblang': nblang, 'xymin': xymin, 'xymax': xymax})
         else:
             return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
         # serializer = SnippetSerializer(data=request.data)
