@@ -65,8 +65,8 @@ for ty,fi in {
     dfs[ty] = pd.read_csv(anafolder+fi,
             sep='\t',
             index_col=['name'],)
-    # print(dfs['direction'])
-    # print(dfs['direction'].head() )
+#print(dfs['distance'])
+#print(dfs['distance'].head() )
 
 minnonzero = 50
 
@@ -98,11 +98,16 @@ def getoptions(ty):
 def tsv2json(xty, x, xminocc, yty, y, yminocc):
     print('!!!!!!!!!!!!!', xty, x, xminocc, yty, y, yminocc)
     print('number languages:',len(dfs[xty]), (len(dfs[yty])))
-    if xty==yty: codf = dfs[xty]
-    else: codf = pd.concat([dfs[xty], dfs[yty]], axis=1)
-    if 'nb_'+x in dfs[xty].columns.values.tolist():
-        codf = codf[codf['nb_'+x] >= xminocc]
-    if 'nb_'+y in dfs[yty].columns.values.tolist():
+    #if xty==yty: codf = dfs[xty]
+    #else: codf = pd.concat([dfs[xty], dfs[yty]], axis=1)
+    xdf = dfs[xty][[x]]
+    ydf = dfs[yty][[y]]
+    codf = pd.concat([xdf, ydf], axis=1)
+
+
+    if 'nb_'+x in dfs[xty].columns.values.tolist(): #todo ZP mettre nb_x, nb_y in dfs (from statcoll.py)
+        codf = codf[codf['nb_'+x] >= xminocc] #todo ZP ajouter? extraire? nb_x et nb_y pour codf
+    if 'nb_'+y in dfs[yty].columns.values.tolist(): #todo
         codf = codf[codf['nb_'+y] >= yminocc]
     nblang = len(codf)
     
@@ -139,9 +144,9 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc):
             ) ]
    
     jso='[ \n'+', '.join(jsos)+']'
-    # print(jso)
+    #print(jso)
     j=json.loads(jso)
-    # print(j)
+    #print(j)
     mi, ma = np.nanmin(codf[[x, y]].values), np.nanmax(codf[[x, y]].values)
     
     if (ma-mi)   < 10: divi = 1
@@ -153,4 +158,4 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc):
     return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi
 
 if __name__ == '__main__':
-    tsv2json('qsdf',x='subj',y='comp:obj')
+    tsv2json('distance',x='subj',xminocc = 0,yty='direction',y='comp:obj',yminocc = 0)
