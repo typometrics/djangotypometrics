@@ -136,15 +136,15 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc):
                 }}
         '''.format(
             index=index,
-            rx=row[x],  # [x],
-            ry=row[y],  # [y],
+            rx=row.iloc[0],  # [x],
+            ry=row.iloc[1],  # [y],
             color= groupColors[langnameGroup[index]], 
             style=groupMarkers[langnameGroup[index]],
             group=langnameGroup[index]
             ) ]
    
     jso='[ \n'+', '.join(jsos)+']'
-    #print(jso)
+    print(jso,"\n \n")
     j=json.loads(jso)
     #print(j)
     mi, ma = np.nanmin(codf[[x, y]].values), np.nanmax(codf[[x, y]].values)
