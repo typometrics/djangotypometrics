@@ -3,7 +3,7 @@ import math
 import pandas as pd 
 import numpy as np
 
-anafolder = 'sud-treebanks-v2.6-analysis'
+anafolder = 'sud-treebanks-v2.8-analysis'
 
 
 groupColors={
@@ -18,9 +18,11 @@ groupColors={
     'Niger-Congo':'black',
     'Tupian':'black',
     'Arawakan': 'black',
+    'Mayan':'darkblue', #to verify
     'Dravidian':'black',
     'isolate':'black',
-    'Pama–Nyungan':'black',
+    'Pama–Nyungan':'cyan', #changed color
+    'Eskimo–Aleut':'cyan', # to verify
     }
 # groupMarkers={'Indo-European-Romance':'<','Indo-European-Baltoslavic':'^','Indo-European-Germanic':'v','Indo-European':'>','Sino-Austronesian':'s', 'Agglutinating':'+'}
 groupMarkers={
@@ -30,14 +32,16 @@ groupMarkers={
     'Indo-European':'triangle',
     'Sino-Austronesian':'star', 
     'Agglutinating':'cross', 
-    'Semitic':'crossRot', 
+    'Semitic':'crossRot', #semitic is a branch of afroasiatic
     'Afroasiatic':'crossRot',
     'Niger-Congo':'rect',
     'Tupian':'rectRounded',
     'Arawakan': 'rectRounded',
+    'Mayan': 'rectRounded', # to verify
     'Dravidian':'rectRot',
     'isolate':'circle',
     'Pama–Nyungan':'circle',
+    'Eskimo–Aleut':'circle', # to verify
     }
 
 langNames={}
@@ -105,9 +109,17 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc):
     codf = pd.concat([xdf, ydf], axis=1)
 
 
-    if 'nb_'+x in dfs[xty].columns.values.tolist(): #todo ZP mettre nb_x, nb_y in dfs (from statcoll.py)
-        codf = codf[codf['nb_'+x] >= xminocc] #todo ZP ajouter? extraire? nb_x et nb_y pour codf
-    if 'nb_'+y in dfs[yty].columns.values.tolist(): #todo
+    if 'nb_'+x in dfs[xty].columns.values.tolist(): 
+        #print("x before concat\n", codf)
+
+        codf = pd.concat([codf,dfs[xty][['nb_'+x]]], axis = 1)
+        #print("added nb_", x,"\n",codf)
+        codf = codf[codf['nb_'+x] >= xminocc] 
+    if 'nb_'+y in dfs[yty].columns.values.tolist() and x != y: 
+        #print("y != x, before concat\n", codf)
+        
+        codf = pd.concat([codf,dfs[yty][['nb_'+y]]], axis = 1)
+        #print("added nb_", y,"\n",codf)
         codf = codf[codf['nb_'+y] >= yminocc]
     nblang = len(codf)
     
@@ -144,7 +156,7 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc):
             ) ]
    
     jso='[ \n'+', '.join(jsos)+']'
-    print(jso,"\n \n")
+    #print(jso,"\n \n")
     j=json.loads(jso)
     #print(j)
     mi, ma = np.nanmin(codf[[x, y]].values), np.nanmax(codf[[x, y]].values)

@@ -1,5 +1,6 @@
 Amharic	Afroasiatic
 Coptic	Afroasiatic
+Beja	Afroasiatic
 Buryat	Agglutinating
 Erzya	Agglutinating
 Estonian	Agglutinating
@@ -23,6 +24,7 @@ Chukot	Agglutinating
 Apurinã	Arawakan
 Tamil	Dravidian
 Telugu	Dravidian
+Central Siberian Yupik	Eskimo–Aleut
 Albanian	Indo-European
 AncientGreek	Indo-European
 Armenian	Indo-European
@@ -43,6 +45,9 @@ Manx	Indo-European
 Nayini	Indo-European
 Soi	Indo-European
 Khunsari	Indo-European
+WesternArmenian	Indo-European
+FrisianDutch	Indo-European
+Kangri	Indo-European
 Belarusian	Indo-European-Baltoslavic
 Bulgarian	Indo-European-Baltoslavic
 Croatian	Indo-European-Baltoslavic
@@ -71,6 +76,7 @@ Norwegian	Indo-European-Germanic
 Swedish	Indo-European-Germanic
 SwedishSign	Indo-European-Germanic
 SwissGerman	Indo-European-Germanic
+Low German	Indo-European-Germanic
 Catalan	Indo-European-Romance
 French	Indo-European-Romance
 Galician	Indo-European-Romance
@@ -82,6 +88,7 @@ Romanian	Indo-European-Romance
 Spanish	Indo-European-Romance
 Basque	isolate
 Warlpiri	Pama–Nyungan
+K'iche'	Mayan
 Bambara	Niger-Congo
 Wolof	Niger-Congo
 Yoruba	Niger-Congo
@@ -102,3 +109,6 @@ MbyáGuaraní	Tupian
 Mundurukú	Tupian
 Tupinambá	Tupian
 Akuntsu	Tupian
+Guajajára	Tupian
+Makuráp	Tupian
+Urubú-Kaapor	Tupian
