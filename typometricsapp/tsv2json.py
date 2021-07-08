@@ -61,11 +61,12 @@ langnameGroup={li.split('\t')[0]:li.split('\t')[1] for li in open('languageGroup
 dfs={}
 
 for ty,fi in {
-    'menzerath': '/abc.languages.v2.7_typometricsformat_4.tsv',
+    'menzerath': '/abc.languages.v2.8_sud_typometricsformat.tsv',
     'direction': '/positive-direction.tsv',
     'distance': '/f-dist.tsv',
     'distribution':'/f.tsv'
     }.items():
+    print(anafolder+fi)
     dfs[ty] = pd.read_csv(anafolder+fi,
             sep='\t',
             index_col=['name'],)
@@ -170,4 +171,4 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc):
     return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi
 
 if __name__ == '__main__':
-    tsv2json('distance',x='subj',xminocc = 0,yty='direction',y='comp:obj',yminocc = 0)
+    res = tsv2json('distance',x='subj',xminocc = 0,yty='direction',y='comp:obj',yminocc = 0)
