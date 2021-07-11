@@ -64,6 +64,7 @@ for ty,fi in {
     'menzerath': '/abc.languages.v2.8_sud_typometricsformat.tsv',
     'direction': '/positive-direction.tsv',
     'distance': '/f-dist.tsv',
+    'treeHeight': '/height.tsv',
     'distribution':'/f.tsv'
     }.items():
     print(anafolder+fi)
