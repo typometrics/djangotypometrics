@@ -7,5 +7,6 @@ urlpatterns = [
 	path('typo/', views.typo),
 	path('typoptions/', views.typoptions),
 	path('types/', views.types),
+	path('scheme/', views.changeScheme),
 	url(r'^api-auth/', include('rest_framework.urls'))
 ]

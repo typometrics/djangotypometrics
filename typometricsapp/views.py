@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from typometricsapp.serializers import UserSerializer, GroupSerializer
-from typometricsapp.tsv2json import tsv2json, getoptions, gettypes
+from typometricsapp.tsv2json import tsv2json, getoptions, gettypes, setScheme
 
 
 def index(request):
@@ -102,4 +102,21 @@ def types(request):
         # else:
         #     return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
  
+
+@api_view(['PUT'])
+def changeScheme(request):
+    """change current scheme (between SUD and UD)"""
+    print("\ni am in view ")
+    if request.method == 'PUT':
+        sche = request.data.get('sche','')
+        print(sche)
+        res = setScheme(sche)
+        print(res)
+        if res:
+            return Response({"change": 'True'})
+        else:
+            return Response({"hey": 'you'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
            

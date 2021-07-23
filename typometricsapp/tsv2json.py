@@ -3,7 +3,9 @@ import math
 import pandas as pd 
 import numpy as np
 
-anafolder = 'sud-treebanks-v2.8-analysis'
+sudFolder = 'sud-treebanks-v2.8-analysis'
+udFolder = 'ud-treebanks-v2.8-analysis'
+#anafolder = sudFolder
 
 
 groupColors={
@@ -58,34 +60,89 @@ langNames = dict(langNames, **mylangNames)
 
 langnameGroup={li.split('\t')[0]:li.split('\t')[1] for li in open('languageGroups.tsv').read().strip().split('\n')  }
 
-dfs={}
+dfs = {}
+"""
+minnonzero = 50
 
 for ty,fi in {
     'menzerath': '/abc.languages.v2.8_sud_typometricsformat.tsv',
     'direction': '/positive-direction.tsv',
+    'direction-cfc':'/posdircfc.tsv',
     'distance': '/f-dist.tsv',
+    'distance-cfc':'/cfc-dist.tsv',
     'treeHeight': '/height.tsv',
     'distribution':'/f.tsv'
     }.items():
     print(anafolder+fi)
     dfs[ty] = pd.read_csv(anafolder+fi,
             sep='\t',
-            index_col=['name'],)
+            index_col=['name'])
+
+    goodcols = [name for name, values in dfs[ty].astype(bool).sum(axis=0).iteritems() if values>= minnonzero]
+    dfs[ty] = dfs[ty][goodcols]
+
+    
 #print(dfs['distance'])
 #print(dfs['distance'].head() )
-
-minnonzero = 50
 
 # cfc:
 df = pd.read_csv(anafolder+'/cfc.tsv',
             sep='\t',
-            index_col=['name'],)
+            index_col=['name'])
 goodcols = [name for name, values in df.astype(bool).sum(axis=0).iteritems() if values>minnonzero]
 
-dfs['direction-cfc']=pd.read_csv(anafolder+'/posdircfc.tsv',
-            sep='\t',
-            index_col=['name'],)#[goodcols]
+#dfs['direction-cfc']=pd.read_csv(anafolder+'/posdircfc.tsv',
+#            sep='\t',
+#            index_col=['name'],)#[goodcols]
 # print('nr columns:',len(dfs['direction-cfc'].columns)) #df[column])
+
+"""
+
+def getRawData(inputfolder, sud = True, minnonzero = 50):
+    print("\ncurrent analysis folder: ", inputfolder)
+
+    dfs={}
+    version = 'sud' if sud else 'ud'
+
+    for ty,fi in {
+        'menzerath': '/abc.languages.v2.8_{}_typometricsformat.tsv'.format(version),
+        'direction': '/positive-direction.tsv',
+        'direction-cfc':'/posdircfc.tsv',
+        'distance': '/f-dist.tsv',
+        'distance-cfc':'/cfc-dist.tsv',
+        'treeHeight': '/height.tsv',
+        'distribution':'/f.tsv'
+        }.items():
+        print(inputfolder+fi)
+        dfs[ty] = pd.read_csv(inputfolder+fi,
+                sep='\t',
+                index_col=['name'])
+
+        goodcols = [name for name, values in dfs[ty].astype(bool).sum(axis=0).iteritems() if values>= minnonzero]
+        dfs[ty] = dfs[ty][goodcols]
+    return dfs
+
+#!!!!! begin get input raw data
+dfsSUD = getRawData(sudFolder)
+dfsUD = getRawData(udFolder, sud = False)
+
+dfs = dfsSUD
+
+def setScheme(sche):
+    print("\n----here!!")
+    global dfs
+    #global anafolder 
+    if sche == 'UD':
+        dfs = dfsUD 
+        #anafolder = udFolder
+        print("scheme changed from SUD to UD")
+        return True
+    if sche == 'SUD':
+        dfs = dfsSUD
+        #anafolder = sudFolder
+        print("scheme changed from UD to SUD")
+        return True
+    return False
 
 
 
@@ -101,9 +158,11 @@ def getoptions(ty):
     	return sorted(list(dfs[ty].head()))
     return list(dfs[ty].head())
 
-def tsv2json(xty, x, xminocc, yty, y, yminocc):
-    print('!!!!!!!!!!!!!', xty, x, xminocc, yty, y, yminocc)
-    print('number languages:',len(dfs[xty]), (len(dfs[yty])))
+def tsv2json(xty, x, xminocc, yty, y, yminocc, verbose = True):
+    #print("anafolder ", anafolder)
+    if verbose:
+        print('!!!!!!!!!!!!!', xty, x, xminocc, yty, y, yminocc)
+        print('number languages:',len(dfs[xty]), len(dfs[yty]))
     #if xty==yty: codf = dfs[xty]
     #else: codf = pd.concat([dfs[xty], dfs[yty]], axis=1)
     xdf = dfs[xty][[x]]
@@ -123,6 +182,8 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc):
         codf = pd.concat([codf,dfs[yty][['nb_'+y]]], axis = 1)
         #print("added nb_", y,"\n",codf)
         codf = codf[codf['nb_'+y] >= yminocc]
+
+
     nblang = len(codf)
     
     jsos=[]
@@ -132,8 +193,8 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc):
         # print('***',index,'!!!',row)
         # print('***', index, '!!!', row[x], row[y])
         
-        if str(row[x]) == 'nan': row[x] = 0
-        if str(row[y]) == 'nan': row[y] = 0
+        if str(row.iloc[0]) == 'nan': row.iloc[0] = 0
+        if str(row.iloc[1]) == 'nan': row.iloc[1] = 0
        
         jsos+=['''
             {{

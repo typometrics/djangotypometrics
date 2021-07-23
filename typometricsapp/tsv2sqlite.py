@@ -3,7 +3,7 @@ import math
 import pandas as pd 
 import numpy as np
 
-anafolder = 'sud-treebanks-v2.6-analysis'
+anafolder = 'sud-treebanks-v2.8-analysis'
 
 
 groupColors={
@@ -57,7 +57,7 @@ langnameGroup={li.split('\t')[0]:li.split('\t')[1] for li in open('languageGroup
 dfs={}
 
 for ty,fi in {
-    'menzerath': '/abc.languages.v2.7_typometricsformat_4.tsv',
+    'menzerath': '/abc.languages.v2.8_sud_typometricsformat.tsv',
     'direction': '/positive-direction.tsv',
     'distance': '/f-dist.tsv',
     'distribution':'/f.tsv'
