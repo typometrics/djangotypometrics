@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from typometricsapp.serializers import UserSerializer, GroupSerializer
-from typometricsapp.tsv2json import tsv2json, getoptions, gettypes, setScheme
+from typometricsapp.tsv2json import tsv2jsonNew, getoptions, gettypes, setScheme
 
 
 def index(request):
@@ -49,20 +49,19 @@ def typo(request):
     elif request.method == 'POST':
         # return Response({'nihao':'world'}) request.data["qsdf"],
         print(456456,request, request.user, request.data)
-        xty = request.data.get('xtype','')
-        yty = request.data.get('ytype','')
-        if xty:
-            jsondata, nblang, xymin, xymax = tsv2json(
-                xty, 
-                request.data.get('x', ''), 
-                request.data.get('xminocc', 0),
+        #xty = request.data.get('xtype','')
+        #yty = request.data.get('ytype','')
+        axtypes = request.data.get('axtypes','')
 
-                yty, 
-                request.data.get('y',''),
-                request.data.get('yminocc', 0)
+        if axtypes:
+            jsondata, nblang, xymin, xymax, xlimMax = tsv2jsonNew(
+                axtypes,
+                request.data.get('ax', ''),
+                request.data.get('axminocc', 0),
+                request.data.get('dim',1) #len(axtypes)>0
                 )
             # print(5555,r)
-            return Response({'chartdata': jsondata, 'nblang': nblang, 'xymin': xymin, 'xymax': xymax})
+            return Response({'chartdata': jsondata, 'nblang': nblang, 'xymin': xymin, 'xymax': xymax, 'xlimMax':xlimMax})
         else:
             return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
         # serializer = SnippetSerializer(data=request.data)

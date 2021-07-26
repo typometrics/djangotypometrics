@@ -110,8 +110,8 @@ def getRawData(inputfolder, sud = True, minnonzero = 50):
         'direction-cfc':'/posdircfc.tsv',
         'distance': '/f-dist.tsv',
         'distance-cfc':'/cfc-dist.tsv',
-        'treeHeight': '/height.tsv',
-        'distribution':'/f.tsv'
+        'distribution':'/f.tsv',
+        'treeHeight': '/height.tsv'
         }.items():
         print(inputfolder+fi)
         dfs[ty] = pd.read_csv(inputfolder+fi,
@@ -157,7 +157,7 @@ def getoptions(ty):
     if ty == 'menzerath':
     	return sorted(list(dfs[ty].head()))
     return list(dfs[ty].head())
-
+"""
 def tsv2json(xty, x, xminocc, yty, y, yminocc, verbose = True):
     #print("anafolder ", anafolder)
     if verbose:
@@ -176,16 +176,14 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc, verbose = True):
         codf = pd.concat([codf,dfs[xty][['nb_'+x]]], axis = 1)
         #print("added nb_", x,"\n",codf)
         codf = codf[codf['nb_'+x] >= xminocc] 
-    if 'nb_'+y in dfs[yty].columns.values.tolist() and x != y: 
+    if 'nb_'+y in dfs[yty].columns.values.tolist() and x != y : 
         #print("y != x, before concat\n", codf)
         
         codf = pd.concat([codf,dfs[yty][['nb_'+y]]], axis = 1)
         #print("added nb_", y,"\n",codf)
         codf = codf[codf['nb_'+y] >= yminocc]
 
-
     nblang = len(codf)
-    
     jsos=[]
     
     for index, row in codf.iterrows():
@@ -222,6 +220,11 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc, verbose = True):
     #print(jso,"\n \n")
     j=json.loads(jso)
     #print(j)
+
+    #idxMax = np.argmax(codf[x].values)
+    #xlimMax =  math.ceil(codf[x].iloc[idxMax] + len(codf[[x]].iloc[idxMax].name))
+    xlimMax = math.ceil(np.nanmax(codf[[x]].values))+1
+
     mi, ma = np.nanmin(codf[[x, y]].values), np.nanmax(codf[[x, y]].values)
     
     if (ma-mi)   < 10: divi = 1
@@ -230,7 +233,96 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc, verbose = True):
     elif (ma-mi) < 600: divi = 50
     else: divi=100
     # print(444444444, mi, ma, divi, ma-((ma-.1) % divi)+divi)
-    return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi
+    return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax
+"""
+
+def tsv2jsonNew(axtypes, ax, axminocc, dim = 2, verbose = True):
+    """"
+    axtypes : types, e.g. distance or [distance, direction]
+    ax: axis, e.g. x or [x,y]
+    aminocc: min occurences of relevant axis 
+    """
+    #check input dimension
+    axminocc = [axminocc] if np.isscalar(axminocc) else axminocc
+    if dim == 1:
+        axtypes = [axtypes] if type(axtypes)==str else axtypes
+        ax = [ax] if type(ax) == str else ax
+    assert(len(axtypes) == dim and len(ax) == dim and len(axminocc) == dim)
+    
+
+    #xty, x, xminocc, yty, y, yminocc,
+    if verbose:
+        print('!!!!!!!!!!!!!', axtypes, ax, axminocc)
+        nLang = [len(dfs[ty]) for ty in axtypes]
+        print('number languages:',nLang)
+
+    axdf = []
+    for d in range(dim):
+        axdf.append(dfs[axtypes[d]][[ax[d]]]) 
+    #xdf = dfs[xty][[x]]
+    #ydf = dfs[yty][[y]]
+    codf = pd.concat(axdf, axis=1)
+
+    for d in range(dim):
+        if 'nb_'+ax[d] in dfs[axtypes[d]].columns.values.tolist() and ax[d] not in ax[:d]:
+            codf = pd.concat([codf, dfs[axtypes[d]][['nb_'+ ax[d]]]], axis = 1)
+            #print("added nb_", x,"\n",codf)
+            codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]] 
+
+    nblang = len(codf)
+    jsos=[]
+    
+    for index, row in codf.iterrows():
+        # print(groupColors)
+        # print('***',index,'!!!',row)
+        # print('***', index, '!!!', row[x], row[y])
+
+        for d in range(dim):
+            if str(row.iloc[d]) == 'nan': row.iloc[d] = 0
+       
+        jsos+=['''
+            {{
+                    "label":["{index}/{group}"],
+                    "backgroundColor": "{color}",
+                    "borderColor": "{color}",
+                    "pointStyle": "{style}",                    
+                    "data": [{{
+                        "x": {rx},
+                        "y": {ry},
+                        "z": {rz},
+                        "r": 5,
+                        "label": "{index}"
+                    }}]
+                }}
+        '''.format(
+            index=index,
+            rx=row.iloc[0],  # [x],
+            ry=row.iloc[1] if dim >1 else 0, # [y],
+            rz= row.iloc[2] if dim == 3 else 0,
+            color= groupColors[langnameGroup[index]], 
+            style=groupMarkers[langnameGroup[index]],
+            group=langnameGroup[index]
+            ) ]
+   
+    jso='[ \n'+', '.join(jsos)+']'
+    #print(jso,"\n \n")
+    j=json.loads(jso)
+    #print(j)
+
+    #idxMax = np.argmax(codf[x].values)
+    #xlimMax =  math.ceil(codf[x].iloc[idxMax] + len(codf[[x]].iloc[idxMax].name))
+    xlimMax = math.ceil(np.nanmax(codf[[ax[0]]].values))+1
+
+    mi, ma = np.nanmin(codf[ax].values), np.nanmax(codf[ax].values) #ax = [x,y] if dim = 2
+    
+    if (ma-mi)   < 10: divi = 1
+    elif (ma-mi) < 60: divi = 5
+    elif (ma-mi) < 120: divi = 10
+    elif (ma-mi) < 600: divi = 50
+    else: divi=100
+    # print(444444444, mi, ma, divi, ma-((ma-.1) % divi)+divi)
+    return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax
+
 
 if __name__ == '__main__':
     res = tsv2json('distance',x='subj',xminocc = 0,yty='direction',y='comp:obj',yminocc = 0)
