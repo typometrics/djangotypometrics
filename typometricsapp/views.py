@@ -54,14 +54,14 @@ def typo(request):
         axtypes = request.data.get('axtypes','')
 
         if axtypes:
-            jsondata, nblang, xymin, xymax, xlimMax = tsv2jsonNew(
+            jsondata, nblang, xymin, xymax, xlimMax, xlimMin = tsv2jsonNew(
                 axtypes,
                 request.data.get('ax', ''),
                 request.data.get('axminocc', 0),
                 request.data.get('dim',1) #len(axtypes)>0
                 )
             # print(5555,r)
-            return Response({'chartdata': jsondata, 'nblang': nblang, 'xymin': xymin, 'xymax': xymax, 'xlimMax':xlimMax})
+            return Response({'chartdata': jsondata, 'nblang': nblang, 'xymin': xymin, 'xymax': xymax, 'xlimMax':xlimMax, 'xlimMin':xlimMin})
         else:
             return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
         # serializer = SnippetSerializer(data=request.data)

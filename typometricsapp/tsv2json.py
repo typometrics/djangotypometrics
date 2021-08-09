@@ -127,6 +127,7 @@ dfsSUD = getRawData(sudFolder)
 dfsUD = getRawData(udFolder, sud = False)
 
 dfs = dfsSUD
+#dfs = dfsUD
 
 def setScheme(sche):
     print("\n----here!!")
@@ -236,7 +237,7 @@ def tsv2json(xty, x, xminocc, yty, y, yminocc, verbose = True):
     return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax
 """
 
-def tsv2jsonNew(axtypes, ax, axminocc, dim = 2, verbose = True):
+def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     """"
     axtypes : types, e.g. distance or [distance, direction]
     ax: axis, e.g. x or [x,y]
@@ -247,6 +248,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim = 2, verbose = True):
     if dim == 1:
         axtypes = [axtypes] if type(axtypes)==str else axtypes
         ax = [ax] if type(ax) == str else ax
+    #print(type(axtypes), len(axtypes), type(ax), len(ax), type(axminocc),len(axminocc))
     assert(len(axtypes) == dim and len(ax) == dim and len(axminocc) == dim)
     
 
@@ -296,8 +298,8 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim = 2, verbose = True):
                 }}
         '''.format(
             index=index,
-            rx=row.iloc[0],  # [x],
-            ry=row.iloc[1] if dim >1 else 0, # [y],
+            rx=row.iloc[0] if dim>1 else 0,  # [x],
+            ry=row.iloc[1] if dim >1 else row.iloc[0], # [y],
             rz= row.iloc[2] if dim == 3 else 0,
             color= groupColors[langnameGroup[index]], 
             style=groupMarkers[langnameGroup[index]],
@@ -311,7 +313,9 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim = 2, verbose = True):
 
     #idxMax = np.argmax(codf[x].values)
     #xlimMax =  math.ceil(codf[x].iloc[idxMax] + len(codf[[x]].iloc[idxMax].name))
-    xlimMax = math.ceil(np.nanmax(codf[[ax[0]]].values))+1
+    xlimMax = math.ceil(np.nanmax(codf[[ax[0]]].values))
+    xlimMin = np.nanmin(codf[[ax[0]]].values) #math.ceil(np.nanmin(codf[[ax[0]]].values))
+    print("\nxmin =", xlimMin, "max = ", xlimMax)
 
     mi, ma = np.nanmin(codf[ax].values), np.nanmax(codf[ax].values) #ax = [x,y] if dim = 2
     
@@ -321,7 +325,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim = 2, verbose = True):
     elif (ma-mi) < 600: divi = 50
     else: divi=100
     # print(444444444, mi, ma, divi, ma-((ma-.1) % divi)+divi)
-    return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax
+    return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax, xlimMin
 
 
 if __name__ == '__main__':
