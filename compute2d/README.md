@@ -6,7 +6,7 @@
 python3 distance.py
 
 * for stable matching 
-* 
+
 #a bug occured when I tested this file just now, I will submit 'distanceMarry.py' later, after bug fixed
 
 python3 distanceMarry.py
