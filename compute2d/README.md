@@ -26,10 +26,10 @@ to change it as 'menzerath' or 'direction'
 SUD as default version
 
 UD:
-* open *tsv2json.py*, at line 100-104, 
+* open *tsv2json.py*, at line 100-104, <br/>
+
 dfsSUD = getRawData(sudFolder)<br/>
-#dfsUD = getRawData(udFolder, sud = False)
-<br/>
+#dfsUD = getRawData(udFolder, sud = False)<br/>
 dfs = dfsSUD #1162 min = 60 <br/>
 #dfs = dfsUD #928 minnonzero = 60<br/>
 <br/>
@@ -37,7 +37,7 @@ put them as follows:
 
 #dfsSUD = getRawData(sudFolder)<br/>
 dfsUD = getRawData(udFolder, sud = False)<br/>
-<br/>
+
 #dfs = dfsSUD #1162 min = 60 <br/>
 dfs = dfsUD #928 minnonzero = 60 <br/>
 
