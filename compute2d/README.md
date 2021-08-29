@@ -15,7 +15,10 @@ python3 distanceMarry.py
 'distance' is the current measure group,
 to change it as 'menzerath' or 'direction'
 
-* open *distance.py* in main fct, line329-331, change the comment '#' of group 
+* open *distance.py* in main fct, line329-331, change the comment '#' of group <br/>
+   group = 'distance' <br/>
+    #group = 'direction'<br/>
+    #group = 'menzerath'<br/>
 * open *distanceMarry.py* in main fct, line297-299, change the comment '#' of group 
 
 
@@ -24,19 +27,19 @@ SUD as default version
 
 UD:
 * open *tsv2json.py*, at line 100-104, 
-`dfsSUD = getRawData(sudFolder)
+dfsSUD = getRawData(sudFolder)<br/>
 #dfsUD = getRawData(udFolder, sud = False)
-
-dfs = dfsSUD #1162 min = 60 
-#dfs = dfsUD #928 minnonzero = 60`
-
+<br/>
+dfs = dfsSUD #1162 min = 60 <br/>
+#dfs = dfsUD #928 minnonzero = 60<br/>
+<br/>
 put them as follows:
 
-`#dfsSUD = getRawData(sudFolder)
-dfsUD = getRawData(udFolder, sud = False)
-
-#dfs = dfsSUD #1162 min = 60 
-dfs = dfsUD #928 minnonzero = 60`
+#dfsSUD = getRawData(sudFolder)<br/>
+dfsUD = getRawData(udFolder, sud = False)<br/>
+<br/>
+#dfs = dfsSUD #1162 min = 60 <br/>
+dfs = dfsUD #928 minnonzero = 60 <br/>
 
 * open *distance.py* in main fct, line321, change version as 'ud'
 * open *distanceMarry.py* in main fct, line288, change version as 'ud'
