@@ -6,6 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from typometricsapp.serializers import UserSerializer, GroupSerializer
 from typometricsapp.tsv2json import tsv2jsonNew, getoptions, gettypes, setScheme
+from typometricsapp.similarGraph import myClosestGraph,setSchemeGraph
 
 
 def index(request):
@@ -41,14 +42,14 @@ def typo(request):
         # queryset = Group.objects.all()
         # serializer_class = GroupSerializer
         # return Response(serializer.data) request.query_params['qsdf']
-        print(123123,request.query_params, request.user)
+        #print(123123,request.query_params, request.user)
         response = Response({'hello':str(request.user)})
         # response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
     elif request.method == 'POST':
         # return Response({'nihao':'world'}) request.data["qsdf"],
-        print(456456,request, request.user, request.data)
+        #print(456456,request, request.user, request.data)
         #xty = request.data.get('xtype','')
         #yty = request.data.get('ytype','')
         axtypes = request.data.get('axtypes','')
@@ -60,7 +61,7 @@ def typo(request):
                 request.data.get('axminocc', 0),
                 request.data.get('dim',1) #len(axtypes)>0
                 )
-            # print(5555,r)
+            print("view.py nblang ", nblang)
             return Response({'chartdata': jsondata, 'nblang': nblang, 'xymin': xymin, 'xymax': xymax, 'xlimMax':xlimMax, 'xlimMin':xlimMin})
         else:
             return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
@@ -79,7 +80,7 @@ def typoptions(request):
     """
 
     if request.method == 'POST':
-        # print(90909,request, request.user, request.data)
+        #print(90909,request, request.user, request.data)
         ty = request.data.get('type','')
         opts = getoptions(ty)
         # print('___',opts)
@@ -100,6 +101,27 @@ def types(request):
         return Response({'types':gettypes()}     )
         # else:
         #     return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def getCloseGraph(request):
+    """
+    get the closest graph name and  distance of the current graph
+    """
+    if request.method == 'POST':
+        typGraph = request.data.get('typ',[])
+        print("=================get ", request.data)
+        print(request)
+        if typGraph:
+            typ,opt,distance, rows = myClosestGraph(
+                typGraph,
+                request.data.get('ax',[]), 
+                request.data.get('version',''),
+                request.data.get('dim',1)
+                )
+            print("res typ", typ," opt ", opt, " distance ", distance)
+            return Response({'types':typ, 'ax':opt,'distance':distance, 'rows':rows }     )
+        else:
+            return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
  
 
 @api_view(['PUT'])
@@ -109,7 +131,7 @@ def changeScheme(request):
     if request.method == 'PUT':
         sche = request.data.get('sche','')
         print(sche)
-        res = setScheme(sche)
+        res = setScheme(sche) and setSchemeGraph(sche)
         print(res)
         if res:
             return Response({"change": 'True'})

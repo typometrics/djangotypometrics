@@ -13,18 +13,18 @@ groupColors={
     'Indo-European-Baltoslavic':'purple',
     'Indo-European-Germanic':'olive',
     'Indo-European':'royalBlue',
-    'Sino-Austronesian':'limeGreen', 
+    'Sino-Austronesian':'limeGreen',  #7 lang
     'Agglutinating':'red', 
-    'Semitic':'orange', 
-    'Afroasiatic':'orange',
-    'Niger-Congo':'black',
-    'Tupian':'black',
-    'Arawakan': 'black',
-    'Mayan':'darkblue', #to verify
-    'Dravidian':'black',
-    'isolate':'black',
-    'Pama–Nyungan':'cyan', #changed color
-    'Eskimo–Aleut':'cyan', # to verify
+    'Semitic':'orange', #semitic is a branch of afroasiatic 6 lang
+    'Afroasiatic':'orange', #3 lang
+    'Niger-Congo':'black', #3 lang
+    'Tupian':'green',  #'olive', #7 lang
+    'Arawakan': 'black',#1 lang
+    'Mayan':'black', # 1 lang
+    'Dravidian':'black',#2 lang
+    'isolate':'black', #1 lang
+    'Pama–Nyungan':'black',#'cyan', 1 lang
+    'Eskimo–Aleut':'black'#'cyan', 1 lang
     }
 # groupMarkers={'Indo-European-Romance':'<','Indo-European-Baltoslavic':'^','Indo-European-Germanic':'v','Indo-European':'>','Sino-Austronesian':'s', 'Agglutinating':'+'}
 groupMarkers={
@@ -32,18 +32,18 @@ groupMarkers={
     'Indo-European-Baltoslavic':'triangle',
     'Indo-European-Germanic':'triangle',
     'Indo-European':'triangle',
-    'Sino-Austronesian':'star', 
+    'Sino-Austronesian':'star',
     'Agglutinating':'cross', 
-    'Semitic':'crossRot', #semitic is a branch of afroasiatic
+    'Semitic':'crossRot',
     'Afroasiatic':'crossRot',
-    'Niger-Congo':'rect',
-    'Tupian':'rectRounded',
-    'Arawakan': 'rectRounded',
-    'Mayan': 'rectRounded', # to verify
-    'Dravidian':'rectRot',
+    'Niger-Congo':'circle', #'rect',
+    'Tupian':'star', 
+    'Arawakan': 'circle', #'rectRounded',
+    'Mayan': 'circle', #'rectRounded', 
+    'Dravidian': 'circle', #'rectRot',
     'isolate':'circle',
     'Pama–Nyungan':'circle',
-    'Eskimo–Aleut':'circle', # to verify
+    'Eskimo–Aleut':'circle', 
     }
 
 langNames={}
@@ -98,7 +98,7 @@ goodcols = [name for name, values in df.astype(bool).sum(axis=0).iteritems() if 
 
 """
 
-def getRawData(inputfolder, sud = True, minnonzero = 50):
+def getRawData(inputfolder, sud = True, minnonzero = 60):
     print("\ncurrent analysis folder: ", inputfolder)
 
     dfs={}
@@ -109,6 +109,7 @@ def getRawData(inputfolder, sud = True, minnonzero = 50):
         'direction': '/positive-direction.tsv',
         'direction-cfc':'/posdircfc.tsv',
         'distance': '/f-dist.tsv',
+        'distance-abs':'/f-dist-abs.tsv',
         'distance-cfc':'/cfc-dist.tsv',
         'distribution':'/f.tsv',
         'treeHeight': '/height.tsv'
@@ -118,16 +119,28 @@ def getRawData(inputfolder, sud = True, minnonzero = 50):
                 sep='\t',
                 index_col=['name'])
 
-        goodcols = [name for name, values in dfs[ty].astype(bool).sum(axis=0).iteritems() if values>= minnonzero]
+        # print(len(dfs[ty].columns))
+        notNanCols = (dfs[ty] == dfs[ty])
+        goodcols = [name for name, values in  notNanCols.astype(bool).sum(axis=0).iteritems() if values>= minnonzero]#for nan
+        print(len(goodcols))
         dfs[ty] = dfs[ty][goodcols]
+        # if ty == 'direction-cfc':
+        #     aaa = [name for name, values in  dfs[ty].astype(bool).sum(axis=0).iteritems() if values< minnonzero]
+        #     print(aaa)
+        #     #print(dfs[ty][aaa].describe())
+        if ty == 'menzerath':
+            goodcols = [name for name, values in  dfs[ty].astype(bool).sum(axis=0).iteritems() if values>= minnonzero]#for 0
+            print(len(goodcols))
+            dfs[ty] = dfs[ty][goodcols]
+    
     return dfs
 
 #!!!!! begin get input raw data
 dfsSUD = getRawData(sudFolder)
 dfsUD = getRawData(udFolder, sud = False)
 
-dfs = dfsSUD
-#dfs = dfsUD
+dfs = dfsSUD #1162 min = 60 
+#dfs = dfsUD #928 minnonzero = 60
 
 def setScheme(sche):
     print("\n----here!!")
@@ -243,6 +256,8 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     ax: axis, e.g. x or [x,y]
     aminocc: min occurences of relevant axis 
     """
+    if verbose:
+        print('!!!!!!!!!!!!!', axtypes, ax, axminocc)
     #check input dimension
     axminocc = [axminocc] if np.isscalar(axminocc) else axminocc
     if dim == 1:
@@ -250,13 +265,6 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
         ax = [ax] if type(ax) == str else ax
     #print(type(axtypes), len(axtypes), type(ax), len(ax), type(axminocc),len(axminocc))
     assert(len(axtypes) == dim and len(ax) == dim and len(axminocc) == dim)
-    
-
-    #xty, x, xminocc, yty, y, yminocc,
-    if verbose:
-        print('!!!!!!!!!!!!!', axtypes, ax, axminocc)
-        nLang = [len(dfs[ty]) for ty in axtypes]
-        print('number languages:',nLang)
 
     axdf = []
     for d in range(dim):
@@ -266,12 +274,15 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     codf = pd.concat(axdf, axis=1)
 
     for d in range(dim):
-        if 'nb_'+ax[d] in dfs[axtypes[d]].columns.values.tolist() and ax[d] not in ax[:d]:
-            codf = pd.concat([codf, dfs[axtypes[d]][['nb_'+ ax[d]]]], axis = 1)
-            #print("added nb_", x,"\n",codf)
-            codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]] 
+        if 'nb_'+ax[d] in ax:
+            codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]]
+        else:
+            if 'nb_'+ax[d] in dfs[axtypes[d]].columns.values.tolist() and ax[d] not in ax[:d]:
+                codf = pd.concat([codf, dfs[axtypes[d]][['nb_'+ ax[d]]]], axis = 1)
+                #print("added nb_", x,"\n",codf)
+                codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]] 
 
-    nblang = len(codf)
+    #nblang = len(codf)
     jsos=[]
     
     for index, row in codf.iterrows():
@@ -279,8 +290,17 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
         # print('***',index,'!!!',row)
         # print('***', index, '!!!', row[x], row[y])
 
+        # for d in range(dim):
+        #     if str(row.iloc[d]) == 'nan': row.iloc[d] = 0
+        
+        remove = False
         for d in range(dim):
-            if str(row.iloc[d]) == 'nan': row.iloc[d] = 0
+            if str(row.iloc[d]) == 'nan':
+                remove = True
+                break
+
+        if remove:
+            continue #skip this language point with value nan
        
         jsos+=['''
             {{
@@ -310,12 +330,16 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     #print(jso,"\n \n")
     j=json.loads(jso)
     #print(j)
+    nbLang = len(j)
+    if verbose:
+        #print('!!!!!!!!!!!!!', axtypes, ax, axminocc)
+        print('number languages:',nbLang)
 
     #idxMax = np.argmax(codf[x].values)
     #xlimMax =  math.ceil(codf[x].iloc[idxMax] + len(codf[[x]].iloc[idxMax].name))
     xlimMax = math.ceil(np.nanmax(codf[[ax[0]]].values))
     xlimMin = np.nanmin(codf[[ax[0]]].values) #math.ceil(np.nanmin(codf[[ax[0]]].values))
-    print("\nxmin =", xlimMin, "max = ", xlimMax)
+    #print("\nxmin =", xlimMin, "max = ", xlimMax)
 
     mi, ma = np.nanmin(codf[ax].values), np.nanmax(codf[ax].values) #ax = [x,y] if dim = 2
     
@@ -325,8 +349,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     elif (ma-mi) < 600: divi = 50
     else: divi=100
     # print(444444444, mi, ma, divi, ma-((ma-.1) % divi)+divi)
-    return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax, xlimMin
-
+    return j, nbLang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax, xlimMin
 
 if __name__ == '__main__':
     res = tsv2json('distance',x='subj',xminocc = 0,yty='direction',y='comp:obj',yminocc = 0)

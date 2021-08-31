@@ -8,5 +8,6 @@ urlpatterns = [
 	path('typoptions/', views.typoptions),
 	path('types/', views.types),
 	path('scheme/', views.changeScheme),
+	path('graph/',views.getCloseGraph),
 	url(r'^api-auth/', include('rest_framework.urls'))
 ]

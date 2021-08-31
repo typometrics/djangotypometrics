@@ -1,23 +1,45 @@
 import os,time,multiprocessing, psutil, tqdm, collections.abc
+from concurrent.futures import ProcessPoolExecutor as fatherPool #with python3.8+
+from functools import partial
+from contextlib import contextmanager
+
 from pathlib import Path
 import numpy as np
-
-import matplotlib.pyplot as plt
 import pandas as pd
 
 from typometricsapp import simpledtw
 from typometricsapp.tsv2json import tsv2jsonNew, getoptions, gettypes
 
-#global var : graphs, id2graphDf, gr2id
+@contextmanager
+def poolcontext(*args, **kwargs):
+    pool = multiprocessing.Pool(*args, **kwargs)
+    yield pool
+    pool.terminate()
+
+#global var : graphs, id2graphDf, gr2id,dimension,version
+dimension = 2
+version = 'ud'
 #types = gettypes()
-types = ['menzerath']
+#types = ['menzerath']
+types = ['distribution']
+#types = ['direction','direction-cfc']
+#types = ['distance','distance-abs','distance-cfc']
+
 print(types)
 graphs = [(ty,opt) for ty in types for opt in getoptions(ty)]
-#print(graphs)
-#id2graphDf, gr2id = prepareData(graphs)
+
+if dimension==2:
+    ax1pts = [(li.split('\t')[0],li.split('\t')[1]) for li in open("clustering/names1ptsGr_"+version+".tsv").read().strip().split('\n') ]
+    #print(ax1pts)
+    axgraphs = [v for v in graphs if v not in ax1pts]
+    graphs1d = axgraphs.copy()
+    graphs= [(grx,gry) for grx in axgraphs for gry in axgraphs if (grx!=gry) ] 
+
+print(len(graphs)) 
+#dim == 2, minonzero=60: 1312170 for sud, 834482 for ud after removing 1 pts graphs
 
 #creat position dataframe from the input jsondata
-def posData(axtypes, ax, dim, axminOcc = None):
+def posData(axtypes, ax, dim, axminOcc = None, lang = True):
     """
     dim as dimension, axtypes & ax: list with len=dim or string with dim 1
     return positions data after normalization (in [0,1])
@@ -25,21 +47,37 @@ def posData(axtypes, ax, dim, axminOcc = None):
     if axminOcc == None:
         axminOcc = np.zeros(dim)
     assert(len(axminOcc) == dim)
-    jsonData, _, _, _, _,_ = tsv2jsonNew(axtypes = axtypes, ax = ax , axminocc = axminOcc,dim = dim, verbose = True)
+    jsonData, _, _, _, _,_ = tsv2jsonNew(axtypes = axtypes, ax = ax , axminocc = axminOcc,dim = dim, verbose = False)
     
     N = len(jsonData)
     dataDict = {}
-    for la in jsonData:
+    for i, la in enumerate(jsonData):
         assert(len(la.get('data'))==1)
         data = la.get('data')[0]
-        dataDict[data.get('label')]={'y': data.get('y')} #graph1d with pts at y axis
+        
+        k = data.get('label') if lang else i
+        dataDict[k]={'y': np.float16(data.get('y'))} #graph1d with pts at y axis
         if dim > 1:
-            dataDict[data.get('label')]['x'] = data.get('x')
+            dataDict[k]['x'] = np.float16(data.get('x'))
         #if dim == 3:
             
     XY = pd.DataFrame(data=dataDict).T
-    #norm = np.linalg.norm(XY.values, axis = 0)
-    return (XY-XY.min())/(XY.max()-XY.min())
+    return XY
+
+    #normalisation
+    sub = (XY.max()-XY.min()) 
+    res =  (XY-XY.min())/sub
+    if sub.loc['y'] == 0:
+        print("Error: should not enter here when computation 2d")
+        print("pos y idem ", axtypes, ax)
+        res['y'] = 0.5
+    # #if 2D: to calculate distances between 2D graphs, graphs with idem column.s removed in advance 
+    # #so we can put in comment this if
+    # if dim > 1 and sub.loc['x'] == 0:
+    #     res['x'] = 0. 
+    #     return res
+    return res
+
 
 
 def langInter(posG1,posG2):
@@ -52,7 +90,7 @@ def langInter(posG1,posG2):
     #print(lanG1 ==lanG2)
     
     if lanG1 !=lanG2:
-        print("\nextract languages")
+        #print("extract languages")
         langN = [lan for lan in lanG1 if lan in lanG2 ]
         #extract positions of langN 
         posG1 =  posG1.loc[langN]
@@ -61,27 +99,56 @@ def langInter(posG1,posG2):
     return posG1, posG2
 
 
-def get1Data(graph):
-    #graph 1D
-    name = graph.split(':')
-    typ,opt = name[0], ':'.join(name[1:])
-    #print("get data: ", typ, opt)
-    return posData(typ,opt, dim = 1)
+# def get1Data(graph, dim):
+#     #graph 1D
+#     if(dim == 1):
+#         name = graph.split(':')
+#         typ,opt = name[0], ':'.join(name[1:])
+#     #print("get data: ", typ, opt)
+#     return posData(typ,opt, dim = dim)
 
-def prepareData(graphs):
+def prepareData(graphs, lang = True):
     """return graph2id and id2graphDf dict, graph 1D"""
     ti = time.time()
     gr2id = {}
     id2gr = {}
-    print("prepare data\n ",len(graphs),'\n', graphs)
+    print("prepare data 1d\n ",len(graphs),'\n')# graphs)
     for i, v in enumerate(graphs):
         #print("idx: ", i, " items ", v)
         gr = ':'.join(v)
         #print(gr)
         gr2id[gr] = i
-        id2gr[i] = [gr,get1Data(gr)]
+        id2gr[i] = [gr,posData(v[0],v[1], dim = 1, lang = lang)]#get1Data(gr)]
     print("data prepared, take time: ", time.time()-ti)
     return id2gr, gr2id 
+
+def newPrepareData2d(graphs,graphs1d,lang = True):
+    ti = time.time()
+    gr2id = {}
+    id2gr = {}
+    print("prepare data 2d\n ",len(graphs),'\n')
+    #prepare axis
+    id2gr1D, gr2id1D = prepareData(graphs1d, lang = lang)
+    #print("axis prepared, take time ", time.time() - ti)
+    #prepare graphs
+    for i, v in enumerate(graphs):
+        #print("idx: ", i, " items ", v)
+        axisx = ':'.join(v[0])
+        axisy = ':'.join(v[1])
+
+        gr = '::'.join([axisx , axisy])
+        gr2id[gr] = i
+        dfx = id2gr1D[gr2id1D[axisx]][1]
+        dfy = id2gr1D[gr2id1D[axisy]][1]
+        res = pd.concat([ dfx.rename(columns={'y':'x'}), dfy], axis=1, join = 'inner')
+
+        if np.any(res.max() != 1.) or np.any(res.min() != 0.):
+            res = (res-res.min())/(res.max()-res.min())
+
+        id2gr[i] = [gr, res]
+    print("data prepared, take time(total): ", time.time()-ti)
+    return id2gr, gr2id
+
 
 def dist(p1,p2):
     return np.sum((p1-p2)**2)**0.5
@@ -93,28 +160,233 @@ def distGraphDep(g1,g2):
     g1,g2: 2 dataframes contain positions of languages in both graph1 and graph2
     """
     g1,g2 = langInter(g1,g2)
-    distSum = 0
+    distSum = 0.
     for la in g1.index:
-        dl = dist(g1.loc[la].values, g2.loc[la].values)
-        distSum += dl
-        #print( la, "\ndeplacement: ", dl)
-        #distSum += dist(g1.loc[la].values, g2.loc[la].values)
-    return distSum
+        # dl = dist(g1.loc[la].values, g2.loc[la].values)
+        # distSum += dl
+        distSum += np.float32(dist(g1.loc[la].values, g2.loc[la].values))
+    return np.float32(distSum/len(g1))
 
-id2graphDf, gr2id = prepareData(graphs)
+#id2graphDf, gr2id = prepareData(graphs) if dimension == 1 else prepareData2d(graphs)
 
-def distData0(graphss):
+
+# def distData0(graphss):
+#     """
+#     distance of cloudform with DTW and languge deplacement for 1D graphs
+#     graphss: list of tuple (ty,option) in analysis data 
+    
+#     """
+#     ti = time.time()
+
+#     if isinstance(graphss, tuple):
+#         graphss = [graphss]
+
+#     print("compute distance for ", graphss) # process", multiprocessing.current_process())
+#     #id2graphDf, gr2id = prepareData(graphs)
+
+#     distDataDep = {} 
+#     distDataDTW = {'distDTW':{},
+#                     'mapping':{}
+#                     }
+
+#     for g1 in graphss:
+#         k1 = ':'.join(g1)
+#         distDataDep[k1] = distDataDep.get(k1,{})
+#         distDataDTW['distDTW'][k1] = distDataDTW['distDTW'].get(k1,{})
+#         distDataDTW['mapping'][k1] = distDataDTW['mapping'].get(k1,{})
+        
+#         for id2, val2 in id2graphDf.items():
+            
+#             k2 = val2[0] 
+#             #if(k1 == k2):   print("self", k1, id2)
+#             distDataDep[k2] = distDataDep.get(k2,{})
+#             distDataDTW['distDTW'][k2] = distDataDTW['distDTW'].get(k2,{})
+#             distDataDTW['mapping'][k2] = distDataDTW['mapping'].get(k2,{})
+            
+#             if distDataDep[k1].get(k2)==None:
+#                 #print('g1 = ',k1, " g2 = ",k2)
+#                 posG1 = id2graphDf[gr2id[k1]][1]    
+#                 posG2 = val2[1] 
+
+#                 distDep = distGraphDep(posG1,posG2)
+                
+#                 distDataDep[k1][k2]= distDep
+#                 distDataDep[k2][k1]= distDep
+                
+#                 assert(distDataDTW['distDTW'][k1].get(k2) == None)
+#                 matches, distDTW, mapping1, mapping2, matrix = simpledtw.dtw(posG1.values, posG2.values)
+#                 distDTW = distDTW/len(matches)
+#                 distDataDTW['distDTW'][k1][k2]= distDTW
+#                 distDataDTW['distDTW'][k2][k1]= distDTW
+#                 distDataDTW['mapping'][k1][k2] = mapping1
+#                 distDataDTW['mapping'][k2][k1] = mapping2        
+
+#     print("take time: ", time.time()-ti)
+
+#     return distDataDep,distDataDTW
+
+def distData1_sub(graphsId, posG1, resDicts):
+    #compute for the row with index k1
+    #resDicts = [dictDep_k1, dictDTW_k1,dictDTW_Map_k1]
+    graphsId = [graphsId] if np.isscalar(graphsId) else graphsId
+    dictDep, dictDTW,dictDTW_map = resDicts
+    map_k2k1 = {}
+
+    for g2 in graphsId:
+        k2 = id2graphDf[g2][0]
+
+        if dictDep.get(k2) ==None:
+            posG2 = id2graphDf[g2][1] 
+            dictDep[k2] = distGraphDep(posG1,posG2) 
+
+        if dictDTW_map.get(k2) == None:
+            assert(dictDTW.get(k2) == None)
+            matches, distDTW, mapping1, mapping2, matrix = simpledtw.dtw(posG1.values, posG2.values)
+            distDTW = np.float32(distDTW/len(matches))
+            dictDTW[k2] = distDTW
+            dictDTW_map[k2] = mapping1
+            map_k2k1[k2]= mapping2 
+
+    return dictDep, dictDTW,dictDTW_map, map_k2k1
+
+def distDataMulti_sub(graphsId, posG1, resDicts):
+    #compute for the row with index k1
+    #graphsId: list of graphs idx 
+
+    ti = time.time()
+    print("compute distance multi_sub ", len(graphsId) )
+    dictDep, dictDTW,dictDTW_map = resDicts
+    map_k2k1 = {}
+
+    #pbar = tqdm.tqdm(total=len(graphs))
+    results = []
+    
+    with poolcontext(processes = psutil.cpu_count()) as pool: #psutil.cpu_count()
+        for res in pool.imap_unordered(partial(distData1_sub, posG1 = posG1, resDicts = resDicts),graphsId):
+            #pbar.update()
+            results.append(res)
+            
+    print("it took",time.time()-ti,"seconds")
+    print("\n\n\n====================== finished reading in. \n combining...")
+    
+    for dists in results:
+        update(dictDep, dists[0])
+        update(dictDTW, dists[1])
+        update(dictDTW_map, dists[2])
+        update(map_k2k1, dists[3])
+        
+    print("it took",time.time()-ti,"seconds")
+    return dictDep, dictDTW,dictDTW_map, map_k2k1
+
+
+def newDistData1(graphsId):
+    ti = time.time()
+    graphsId = [graphsId] if np.isscalar(graphsId) else graphsId
+    
+    #print("new version dist data")
+    # print("compute distance for ", id2graphDf[graphsId][0]) # process", multiprocessing.current_process())
+
+    distDataDep = {} 
+    distDataDTW = {'distDTW':{},
+                    'mapping':{}
+                    }
+
+    for g1 in graphsId:
+        k1 = id2graphDf[g1][0] 
+        print("compute distance for ", k1) 
+        #init
+        distDataDep[k1] = distDataDep.get(k1,{})
+        distDataDTW['distDTW'][k1] = distDataDTW['distDTW'].get(k1,{})
+        distDataDTW['mapping'][k1] = distDataDTW['mapping'].get(k1,{})
+        #k1 == k2
+        posG1 = id2graphDf[g1][1]
+        distDataDep[k1][k1] = 0.
+        distDataDTW['distDTW'][k1][k1] = 0.
+        distDataDTW['mapping'][k1][k1] = [[i] for i in range(len(posG1))]
+
+        if dimension == 2:
+            ax0,ax1 = k1.split('::')
+            k3 = ax1+'::'+ax0
+            distDataDep[k3] = distDataDep.get(k3,{})
+            distDataDTW['distDTW'][k3] = distDataDTW['distDTW'].get(k3,{})
+            distDataDTW['mapping'][k3] = distDataDTW['mapping'].get(k3,{})
+
+        #compute for k1
+        resDictK1 = [distDataDep.get(k1,{}),
+                    distDataDTW['distDTW'].get(k1,{}), 
+                    distDataDTW['mapping'].get(k1,{}) ]
+
+        grIds = range(len(gr2id))  #gr2id global var
+        dictDep, dictDTW,dictDTW_map, map_k2k1 = distDataMulti_sub( grIds , posG1, resDictK1)
+        #print("keys in map_k2k1", map_k2k1.keys())
+
+        #affectation
+        distDataDep[k1] = dictDep
+        distDataDTW['distDTW'][k1]= dictDTW
+        distDataDTW['mapping'][k1]=dictDTW_map
+
+        if False:
+            resfd = "clusteringTMP/menzerath/tempo{}".format(g1)
+            Path(resfd).mkdir(parents=True, exist_ok=True)
+            files = ["tmp_"+k1+"_dep.tsv", "tmp_"+k1+"_dtw.tsv","tmp_"+k1+"_map.tsv"]
+            dicts = [distDataDep[k1], distDataDTW['distDTW'][k1],distDataDTW['mapping'][k1]]
+
+            for i in range(len(files)):
+                with open(resfd+'/'+files[i], 'w+',encoding="utf8")as t:
+                    line0 = "options"+'\t'+k1 +'\n' 
+                    t.write(line0)
+                    for gr in sorted(dicts[i]):
+                        t.write(gr + '\t'+ str(dicts[i].get(gr))+'\n')
+        
+        for g2 in grIds:
+            if g2!= g1:
+                k2 = id2graphDf[g2][0]
+                #print("\nk2 ==",k2)
+                assert(k2 in dictDep.keys() and k2 in dictDTW.keys() and k2 in dictDTW_map.keys() )
+                distDataDep[k2] = distDataDep.get(k2,{})
+                distDataDTW['distDTW'][k2] = distDataDTW['distDTW'].get(k2,{})
+                distDataDTW['mapping'][k2] = distDataDTW['mapping'].get(k2,{})
+
+                distDataDep[k2][k1]= distDataDep[k1][k2]
+                distDataDTW['distDTW'][k2][k1]= distDataDTW['distDTW'][k1][k2]
+                if k2 in map_k2k1.keys():
+                    distDataDTW['mapping'][k2][k1] = map_k2k1[k2] #if g2==g1, k2 not in map_k2k1
+
+                if dimension == 2:
+                    ax0,ax1 = k2.split('::')
+                    k4 = ax1+'::'+ax0
+                    if distDataDep[k3].get(k4)==None:#when K4 = K1, if k1 = AB, k2 = BA, then K3 = BA, K4 = AB
+                        distDataDep[k4] = distDataDep.get(k4,{})
+                        distDataDTW['distDTW'][k4] = distDataDTW['distDTW'].get(k4,{})
+                        distDataDTW['mapping'][k4] = distDataDTW['mapping'].get(k4,{})
+
+                        distDataDep[k3][k4]= distDataDep[k1][k2]
+                        distDataDep[k4][k3]= distDataDep[k1][k2]
+                        assert(distDataDTW['distDTW'][k3].get(k4) == None)
+                        distDataDTW['distDTW'][k3][k4]= distDataDTW['distDTW'][k1][k2]
+                        distDataDTW['distDTW'][k4][k3]= distDataDTW['distDTW'][k1][k2]
+                        distDataDTW['mapping'][k3][k4] = distDataDTW['mapping'][k1][k2]
+                        distDataDTW['mapping'][k4][k3] = distDataDTW['mapping'][k2][k1]
+        # distDataDep[k1] = {}
+        # distDataDTW['distDTW'][k1] = {}
+        # distDataDTW['mapping'][k1] = {}
+
+    print("take time: ", time.time()-ti)
+    return distDataDep,distDataDTW
+
+
+
+def distData1(graphsId):
     """
     distance of cloudform with DTW and languge deplacement for 1D graphs
-    graphss: list of tuple (ty,option) in analysis data 
+    graphsId: list of graph id
     
     """
+    
     ti = time.time()
+    graphsId = [graphsId] if np.isscalar(graphsId) else graphsId
 
-    if isinstance(graphss, tuple):
-        graphss = [graphss]
-
-    print("compute distance for ", graphss) # process", multiprocessing.current_process())
+    # print("compute distance for ", id2graphDf[graphsId][0]) # process", multiprocessing.current_process())
     #id2graphDf, gr2id = prepareData(graphs)
 
     distDataDep = {} 
@@ -122,14 +394,27 @@ def distData0(graphss):
                     'mapping':{}
                     }
 
-    for g1 in graphss:
-        k1 = ':'.join(g1)
+    for g1 in graphsId:
+        k1 = id2graphDf[g1][0] #':'.join(g1)
+        print("compute distance for ", k1) 
         distDataDep[k1] = distDataDep.get(k1,{})
         distDataDTW['distDTW'][k1] = distDataDTW['distDTW'].get(k1,{})
         distDataDTW['mapping'][k1] = distDataDTW['mapping'].get(k1,{})
         
-        for id2, val2 in id2graphDf.items():
-            
+        posG1 = id2graphDf[g1][1]
+        distDataDep[k1][k1] = 0.
+        distDataDTW['distDTW'][k1][k1] = 0.
+        distDataDTW['mapping'][k1][k1] = [[i] for i in range(len(posG1))]
+
+        if dimension == 2:
+            ax0,ax1 = k1.split('::')
+            k3 = ax1+'::'+ax0
+            distDataDep[k3] = distDataDep.get(k3,{})
+            distDataDTW['distDTW'][k3] = distDataDTW['distDTW'].get(k3,{})
+            distDataDTW['mapping'][k3] = distDataDTW['mapping'].get(k3,{})
+        
+
+        for id2, val2 in id2graphDf.items():            
             k2 = val2[0] 
             #if(k1 == k2):   print("self", k1, id2)
             distDataDep[k2] = distDataDep.get(k2,{})
@@ -137,21 +422,36 @@ def distData0(graphss):
             distDataDTW['mapping'][k2] = distDataDTW['mapping'].get(k2,{})
             
             if distDataDep[k1].get(k2)==None:
-                #print('g1 = ',k1, " g2 = ",k2)
-                posG1 = id2graphDf[gr2id[k1]][1]    
+                #print('g1 = ',k1, " g2 = ",k2)    
                 posG2 = val2[1] 
-
-                distDep = distGraphDep(posG1,posG2)
-                matches, distDTW, mapping1, mapping2, matrix = simpledtw.dtw(posG1.values, posG2.values)
+                distDep = distGraphDep(posG1,posG2)                
                 distDataDep[k1][k2]= distDep
                 distDataDep[k2][k1]= distDep
                 
                 assert(distDataDTW['distDTW'][k1].get(k2) == None)
-                #print("--------\n", distData['cloudForm'][k1].get(k2))
+                matches, distDTW, mapping1, mapping2, matrix = simpledtw.dtw(posG1.values, posG2.values)
+                distDTW = np.float32(distDTW/len(matches))
                 distDataDTW['distDTW'][k1][k2]= distDTW
                 distDataDTW['distDTW'][k2][k1]= distDTW
                 distDataDTW['mapping'][k1][k2] = mapping1
-                distDataDTW['mapping'][k2][k1] = mapping2        
+                distDataDTW['mapping'][k2][k1] = mapping2 
+
+                if dimension == 2:
+                    ax0,ax1 = k2.split('::')
+                    k4 = ax1+'::'+ax0
+                    if distDataDep[k3].get(k4)==None:#when K4 = K1, if k1 = AB, k2 = BA, then K3 = BA, K4 = AB
+                        distDataDep[k4] = distDataDep.get(k4,{})
+                        distDataDTW['distDTW'][k4] = distDataDTW['distDTW'].get(k4,{})
+                        distDataDTW['mapping'][k4] = distDataDTW['mapping'].get(k4,{})
+
+                        distDataDep[k3][k4]= distDep
+                        distDataDep[k4][k3]= distDep
+                        assert(distDataDTW['distDTW'][k3].get(k4) == None)
+                        distDataDTW['distDTW'][k3][k4]= distDTW
+                        distDataDTW['distDTW'][k4][k3]= distDTW
+                        distDataDTW['mapping'][k3][k4] = mapping1
+                        distDataDTW['mapping'][k4][k3] = mapping2
+                    #assert(distDataDTW['distDTW'][k1].get(k2) == None)
 
     print("take time: ", time.time()-ti)
     return distDataDep,distDataDTW
@@ -169,6 +469,9 @@ def update(d, u):
 
 def distDataMulti(graphs):
 
+    #pools in pools. BrokenPipeError no 32 if len(graphs) is very large/nb(process) very large
+    #graphs: list of graphs idx
+
     ti = time.time()
     print("compute distance multi")
 
@@ -181,8 +484,12 @@ def distDataMulti(graphs):
     pbar = tqdm.tqdm(total=len(graphs))
     results = []
     
+    # with fatherPool(psutil.cpu_count()) as pool_out: #this works with little datasize len(graph)<
+    #     for res in pool_out.map(newDistData1,graphs):
+    #         pbar.update()
+    #         results.append(res)
     with multiprocessing.Pool(psutil.cpu_count()) as pool:
-        for res in pool.imap_unordered(distData0, graphs):
+        for res in pool.imap_unordered(distData1,graphs):
             pbar.update()
             results.append(res)
             
@@ -196,153 +503,6 @@ def distDataMulti(graphs):
         
     print("it took",time.time()-ti,"seconds")
     return distDataDep,distDataDTW
-
-#algo marriage
-def preferList(lang, graph):
-    """
-    for language with position lang in graph1, find its preference list of languages in graph2 'graph'
-    graph1 and graph2 have the same dimension
-    """
-    pl = {}
-    for la in range(len(graph)):
-        d = dist(lang, graph.iloc[la].values)
-        pl[la] = d
-    #print(pl)
-    return sorted(pl.items(), key=lambda x: x[1])
-
-
-def prepareList(gr1, gr2):
-    """
-    gr1, gr2: 2 dataframes
-    return preference list for languages in gr1 with index and dist of pts in gr2
-    """
-    plists = {}
-    for la in range(len(gr1)):
-        plists[la] = preferList(gr1.iloc[la], gr2)
-    return plists
-
-def initMatch(graph):
-    """
-    graph: a dataframe
-    return a dictionary with indice of languages in gr1 as keys 
-    and [partner index in gr2, distance, partener index in plists] as values, set to default value [-1,-1.,-1]  
-    """
-    matchInit = {}
-    for la in range(len(graph)):
-        matchInit[la] = [-1,-1., -1]
-    return matchInit    
-
-def singleRound(singleOnes,prLists1, matchDict1, matchDict2):
-    """
-    algo marriage, graph1-optimal : gr1 propose, gr2 decide
-    prLists1: a dictionary with{language index i: [prefefence list of i ],... }
-    """
-    #global matchDict1
-    #global matchDict2
-    for idx in singleOnes:
-        candidat = matchDict1[idx][2]+1 #index of candidate in prLists1
-        cinfo = prLists1[idx][candidat] #(id in graph2, distance)
-        #print("idx= ", idx, "can = ", candidat, matchDict1[idx] )
-        matchDict1[idx][-1] = candidat
-
-        if matchDict2[cinfo[0]][0] == -1: # if candidate unmarried
-            matchDict1[idx][:2] = [cinfo[0],cinfo[1]] #partner index in graph2, dist, index in prLIst1
-            matchDict2[cinfo[0]]=[idx, cinfo[1]] #, -1]
-        else:#if married, compare preference (i.e distance)
-            #print("idx",idx," can ",candidat, " current ", matchDict2[cinfo[0]])
-            if cinfo[1] < matchDict2[cinfo[0]][1]: #if candidate prefer idx than her current partener
-                #print("marriage: ", idx, " ", cinfo[0], "candidat n ", candidat)
-                matchDict1[matchDict2[cinfo[0]][0]][:2] = [-1,-1.] #divorce
-                matchDict1[idx][:2] = [cinfo[0],cinfo[1]] #re marry
-                matchDict2[cinfo[0]]=[idx, cinfo[1]] #, -1]
-    return matchDict1, matchDict2
-
-def distMarriage(prLists1, gr1,gr2):
-    """return dist of stable marriage match between  graph1 et graph2 """
-    match1 = initMatch(gr1)
-    match2 = initMatch(gr2)
-    
-    single = [ idx for idx, val in match1.items() if val[0] == -1 ]
-    while(single):
-        #print(len(single))
-        match1, match2 = singleRound(single, prLists1, match1, match2)
-        single = [ idx for idx, val in match1.items() if val[0] == -1 ]
-    
-    distls= [ val[1] for idx, val in match1.items()]
-    return sum(distls),match1
-
-
-def distDataMarry(graphss):
-    """
-    distance of cloudform with stable marriage problem
-    graphss: list of tuple (ty,option) in analysis data 
-    
-    """
-    ti = time.time()
-
-    if isinstance(graphss, tuple):
-        graphss = [graphss]
-
-    print("compute distance for ", graphss) # process", multiprocessing.current_process())
-
-    distDataM = {'dist': {}, 'match':{}}
-
-    for g1 in graphss:
-        k1 = ':'.join(g1)
-        distDataM['dist'][k1] = distDataM['dist'].get(k1,{})
-        distDataM['match'][k1] = distDataM['match'].get(k1,{}) #k1 optimal
-
-        distDataM['dist'][k1][k1]= 0.0
-        posG1 = id2graphDf[gr2id[k1]][1] 
-        distDataM['match'][k1][k1] = list(range(len(posG1)))
-        print("g1 = ", k1)
-        
-        for id2, val2 in id2graphDf.items():
-            
-            k2 = val2[0] 
-            #if(k1 == k2):   print("self", k1, id2)
-            distDataM['dist'][k2] = distDataM['dist'].get(k2,{})
-            distDataM['match'][k2] = distDataM['match'].get(k2,{})
-            
-            if distDataM['dist'][k1].get(k2)==None:
-                print('g1 = ',k1, " g2 = ",k2)
-                posG2 = val2[1] 
-
-                prl1 = prepareList(posG1, posG2)
-                distM, match1 = distMarriage( prl1, posG1, posG2)
-                distDataM['dist'][k1][k2]= distM
-                distDataM['dist'][k2][k1]= distM
-                distDataM['match'][k1][k2] = [match1[idx][0] for idx in range(len(match1))] #range(len(match1)) == sorted(match1)
-                
-                prl2 = prepareList(posG2, posG1)
-                _, match2 = distMarriage(prl2, posG2, posG1)
-                distDataM['match'][k2][k1] = [match2[idx][0] for idx in range(len(match2))]
-                
-    
-    print("take time: ", time.time()-ti)
-    return distDataM
-
-def distMarryMulti(graphs):
-    ti = time.time()
-    print("compute distance multi")
-    distDataM = {'dist': {}, 'match':{}}
-
-    pbar = tqdm.tqdm(total=len(graphs))
-    results = []
-    
-    with multiprocessing.Pool(psutil.cpu_count()) as pool:
-        for res in pool.imap_unordered(distDataMarry, graphs):
-            pbar.update()
-            results.append(res)        
-    print("it took",time.time()-ti,"seconds")
-    print("\n\n\n====================== finished reading in. \n combining...")
-    
-    for dists in results:
-        update(distDataM['dist'], dists['dist'])
-        update(distDataM['match'], dists['match'])
-        
-    print("it took",time.time()-ti,"seconds")
-    return distDataM
 
 
 def writeData(filenames,dicts,resFolder = "clustering"):
@@ -361,39 +521,65 @@ def writeData(filenames,dicts,resFolder = "clustering"):
                 t.write(line)
 
 
-def prepareDist0(version, resfolder = "clustering" ):
+def prepareDist0(version, graphsIdList,resfolder = "clustering"):
     #types = gettypes()
     #graphs = [(ty,opt) for ty in types for opt in getoptions(ty)]
-    distDataDep,distDataDTW = distDataMulti(graphs) # distData0(graphs)
+    distDataDep,distDataDTW = distDataMulti(graphsIdList) #newDistData1(graphsIdList)  # distData0(graphs) 
 
     files = ["distDep_"+version+".tsv", "distDTW_"+version+".tsv","mappingDTW_"+version+".tsv"]
     dicts = [distDataDep, distDataDTW['distDTW'],distDataDTW['mapping']]
 
     writeData(files, dicts, resFolder = resfolder)
 
-def prepareDistMarr(version, resfolder = "clustering" ):
-    distDataMarr =  distMarryMulti(graphs)
-    files = [ "distMarry_"+version+".tsv","mappingMarry_"+version+".tsv"]
-    writeData(files, [distDataMarr['dist'],distDataMarr['match'] ] , resFolder = resfolder)
 
+def getOnePointGr(version):
+    """
+    #modify posData to get the 'idem' variable
+    find 1D graph(mesure:opt) where every point shares the same position, and remove them before computation of 2D graph
+    """ 
+    gr1pts = []
+    nb = 0
 
+    with open("clustering/info1ptsGr_"+version+".tsv", 'w+',encoding="utf8")as t1:
+        with open("clustering/names1ptsGr_"+version+".tsv", 'w+',encoding="utf8")as tname:
+            t1.write("graphName\tpointsNumber\tvalue\n")
+            for i, v in enumerate(graphs):
+                idem, nbPts, vPts = posData(v[0],v[1], dim = 1, lang = True)
+                if idem:
+                    nb = nb+1
+                    gr1pts.append(v)
+                    print(i)
+                    t1.write(':'.join(v)+'\t'+str(nbPts)+'\t'+str(vPts)+'\n')
+                    tname.write('\t'.join(v)+'\n')
+
+    print("graph 1D with 1 pts : nbr ", nb, "name\n", gr1pts)
+    return nb, gr1pts
 
 if __name__ == '__main__':
-    resfolder = "clusteringTest"
-    #prepareDist0(version = "sudTIMEtest",resfolder = resfolder )
-    #prepareDistMarr(version = "sudtest0",resfolder = resfolder )
-
+    #prepare data
+    id2graphDf, gr2id = prepareData(graphs) if dimension == 1 else newPrepareData2d(graphs, graphs1d)
     
-    dM = distDataMarry(('menzerath', 'a_any_any_same'))
-    for i, v in dM['dist'].items():
-        print(i,'\n',v)
+    #computation
+    #resfolder = "clusteringTest/dist2D/pool"
+    # types = ['menzerath']
+    # graphs = [(ty,opt) for ty in types for opt in getoptions(ty)]
+    # id2graphDf, gr2id = prepareData(graphs) 
+    resfolder = "clustering/dist2D/distribution"
+    prepareDist0(version = "ud2d_distribution",graphsIdList = np.arange(len(graphs)), resfolder = resfolder )
+
+    # types = ['menzerath']
+    # graphs = [(ty,opt) for ty in types for opt in getoptions(ty)]
+    # id2graphDf, gr2id = prepareData(graphs) 
+    # resfolder = "clustering/dist1D/menzerath"
+    # prepareDist0(version = "ud1d_menzerath",graphsIdList = np.arange(len(graphs)), resfolder = resfolder )
 
 
-    
 
 
-
-
-
+    # #find graphs where every pts is equal to each other, remove them from axis options before computation of 2d graph to avoid repetition
+    # nb, gr1pts = getOnePointGr(version)
+    # print("1d graphs name of "+version+" with idem columns")
+    # ax1pts = [(li.split('\t')[0],li.split('\t')[1]) for li in open("clustering/names1ptsGr_"+version+".tsv").read().strip().split('\n') ]
+    # print(ax1pts)
 
 
