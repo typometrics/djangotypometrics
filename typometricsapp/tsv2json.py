@@ -112,22 +112,18 @@ def getRawData(inputfolder, sud = True, minnonzero = 60):
         'distance-abs':'/f-dist-abs.tsv',
         'distance-cfc':'/cfc-dist.tsv',
         'distribution':'/f.tsv',
-        'treeHeight': '/height.tsv'
+        'treeHeight': '/height.tsv',
         }.items():
         print(inputfolder+fi)
         dfs[ty] = pd.read_csv(inputfolder+fi,
                 sep='\t',
                 index_col=['name'])
-
-        # print(len(dfs[ty].columns))
+        #remove nan
         notNanCols = (dfs[ty] == dfs[ty])
         goodcols = [name for name, values in  notNanCols.astype(bool).sum(axis=0).iteritems() if values>= minnonzero]#for nan
         print(len(goodcols))
         dfs[ty] = dfs[ty][goodcols]
-        # if ty == 'direction-cfc':
-        #     aaa = [name for name, values in  dfs[ty].astype(bool).sum(axis=0).iteritems() if values< minnonzero]
-        #     print(aaa)
-        #     #print(dfs[ty][aaa].describe())
+
         if ty == 'menzerath':
             goodcols = [name for name, values in  dfs[ty].astype(bool).sum(axis=0).iteritems() if values>= minnonzero]#for 0
             print(len(goodcols))
@@ -139,11 +135,10 @@ def getRawData(inputfolder, sud = True, minnonzero = 60):
 dfsSUD = getRawData(sudFolder)
 dfsUD = getRawData(udFolder, sud = False)
 
-dfs = dfsSUD #1162 min = 60 
-#dfs = dfsUD #928 minnonzero = 60
+dfs = dfsSUD #default scheme: SUD
+#dfs = dfsUD 
 
 def setScheme(sche):
-    print("\n----here!!")
     global dfs
     #global anafolder 
     if sche == 'UD':
@@ -166,7 +161,7 @@ def gettypes():
 
 
 def getoptions(ty):
-    print(333333,ty)
+    print("get options for",ty)
     # print(dfs['direction'].head(),list(dfs[ty].head()) )
     if ty == 'menzerath':
     	return sorted(list(dfs[ty].head()))
@@ -269,30 +264,29 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     axdf = []
     for d in range(dim):
         axdf.append(dfs[axtypes[d]][[ax[d]]]) 
-    #xdf = dfs[xty][[x]]
-    #ydf = dfs[yty][[y]]
+
     codf = pd.concat(axdf, axis=1)
 
+    #set min occurence of functions in treebank
     for d in range(dim):
+        #menzerath
         if 'nb_'+ax[d] in ax:
             codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]]
         else:
-            if 'nb_'+ax[d] in dfs[axtypes[d]].columns.values.tolist() and ax[d] not in ax[:d]:
+            if 'nb_'+ax[d] in dfs[axtypes[d]].columns.values.tolist() and ax[d] not in ax[:d]: 
+                #if nb_ in dfs[axtype of given dim] and havn't been added before
                 codf = pd.concat([codf, dfs[axtypes[d]][['nb_'+ ax[d]]]], axis = 1)
-                #print("added nb_", x,"\n",codf)
                 codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]] 
+        # #others
+        # if axtypes[d] in ['distance','distance-abs','direction'] and 'nb_'+ax[d] not in codf.keys():
+        #     fre = dfs['distribution'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
+        #     codf = pd.concat([codf, fre], axis = 1)
+        #     codf = codf[codf['nb_'+ax[d]] >= axminocc[d]]
 
-    #nblang = len(codf)
-    jsos=[]
-    
+
+    jsos=[]    
     for index, row in codf.iterrows():
-        # print(groupColors)
-        # print('***',index,'!!!',row)
-        # print('***', index, '!!!', row[x], row[y])
-
-        # for d in range(dim):
-        #     if str(row.iloc[d]) == 'nan': row.iloc[d] = 0
-        
+        #remove row if nan        
         remove = False
         for d in range(dim):
             if str(row.iloc[d]) == 'nan':

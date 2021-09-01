@@ -1,16 +1,20 @@
 ### compute distances between 2D graph:
 
-
+STEP 0<br/>
 * for language distribution and DTW:
 
 python3 distance.py
 
+* if distance.py doesn't work, try:
+python3 distance1.py<br/>
+
+
 * for stable matching 
 
-#a bug occured when I tested this file just now, I will submit 'distanceMarry.py' later, after bug fixed
-
 python3 distanceMarry.py
+<br/>
 
+STEP 1<br/>
 #### groups
 'distance' is the current measure group,
 to change it as 'menzerath' or 'direction'
@@ -19,7 +23,7 @@ to change it as 'menzerath' or 'direction'
    group = 'distance' <br/>
     #group = 'direction'<br/>
     #group = 'menzerath'<br/>
-* open *distanceMarry.py* in main fct, line297-299, change the comment '#' of group 
+* open *distanceMarry.py* in main fct, line293-295, change the comment '#' of group 
 
 
 #### version

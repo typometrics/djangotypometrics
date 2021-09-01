@@ -1,15 +1,13 @@
-import os,time,multiprocessing, psutil, tqdm, collections.abc
+import os,time,multiprocessing, psutil, tqdm, collections.abc,  simpledtw
 from pathlib import Path
 import numpy as np
-
-import matplotlib.pyplot as plt
 import pandas as pd
 
-from typometricsapp import simpledtw
-from typometricsapp.tsv2json import tsv2jsonNew, getoptions, gettypes
+from tsv2json import tsv2jsonNew, getoptions, gettypes
 from distance import langInter,prepareData,newPrepareData2d,dist,update, writeData
 
 #algo marriage
+
 def getDistArray(gr1,gr2):
     """
     gr1, gr2: 2 dataframes
@@ -119,7 +117,6 @@ def singleRound(singleOnes,prLists1, matchDict1, matchDict2):
     for idx in singleOnes:
         #print(len(prLists1))
         candidat = matchDict1[idx][2]+1 #index of candidate in prLists1
-        #print('======== ',candidat, len(prLists1),idx)
         cinfo = prLists1[idx][candidat] #(id in graph2, distance)
 
         matchDict1[idx][-1] = candidat
@@ -293,11 +290,11 @@ if __name__ == '__main__':
      }
 
     #group distance
-    #group = 'distance'
-    group = 'direction'
+    group = 'distance'
+    #group = 'direction'
     #group = 'menzerath'
     types = typeGroups[group]
-    graphs = [(ty,opt) for ty in types for opt in getoptions(ty)]
+    graphs = [(ty,opt) for ty in types for opt in getoptions(ty)][:4]
     if dimension==2:
         ax1pts = [(li.split('\t')[0],li.split('\t')[1]) for li in open("clustering/names1ptsGr_"+version+".tsv").read().strip().split('\n') ]
         axgraphs = [v for v in graphs if v not in ax1pts] #remove the 1D graphs among 2d graphs
