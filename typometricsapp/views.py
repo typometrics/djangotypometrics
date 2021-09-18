@@ -6,7 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from typometricsapp.serializers import UserSerializer, GroupSerializer
 from typometricsapp.tsv2json import tsv2jsonNew, getoptions, gettypes, setScheme
-from typometricsapp.similarGraph import myClosestGraph,setSchemeGraph
+from typometricsapp.similarGraph import myClosestGraph,setSchemeGraph, graphParam
 
 
 def index(request):
@@ -55,14 +55,14 @@ def typo(request):
         axtypes = request.data.get('axtypes','')
 
         if axtypes:
-            jsondata, nblang, xymin, xymax, xlimMax, xlimMin = tsv2jsonNew(
+            jsondata, nblang, xymin, xymax, xlimMin = tsv2jsonNew(
                 axtypes,
                 request.data.get('ax', ''),
                 request.data.get('axminocc', 0),
                 request.data.get('dim',1) #len(axtypes)>0
                 )
             print("view.py nblang ", nblang)
-            return Response({'chartdata': jsondata, 'nblang': nblang, 'xymin': xymin, 'xymax': xymax, 'xlimMax':xlimMax, 'xlimMin':xlimMin})
+            return Response({'chartdata': jsondata, 'nblang': nblang, 'xymin': xymin, 'xymax': xymax, 'xlimMin':xlimMin})
         else:
             return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
         # serializer = SnippetSerializer(data=request.data)
@@ -120,6 +120,23 @@ def getCloseGraph(request):
                 )
             print("res typ", typ," opt ", opt, " distance ", distance)
             return Response({'types':typ, 'ax':opt,'distance':distance, 'rows':rows }     )
+        else:
+            return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def getGraphParam(request):
+    """
+    get the measure type and option from a givin graph name in the tsv table 
+    format 1d: 'type name:axis name';  2d: 'type0:axis0::type1:axis1'  
+    """
+    if request.method == 'POST':
+        grname = request.data.get('name','')
+        if grname:
+            typ,opt= graphParam(
+                grname,
+                request.data.get('dim',1)
+                )
+            return Response({'types':typ, 'ax':opt}    )
         else:
             return Response({'hey':'you!'}, status=status.HTTP_400_BAD_REQUEST)
  

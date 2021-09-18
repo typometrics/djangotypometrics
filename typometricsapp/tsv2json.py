@@ -18,7 +18,7 @@ groupColors={
     'Semitic':'orange', #semitic is a branch of afroasiatic 6 lang
     'Afroasiatic':'orange', #3 lang
     'Niger-Congo':'black', #3 lang
-    'Tupian':'green',  #'olive', #7 lang
+    'Tupian':'cadetBlue',  #'olive', #7 lang
     'Arawakan': 'black',#1 lang
     'Mayan':'black', # 1 lang
     'Dravidian':'black',#2 lang
@@ -113,6 +113,7 @@ def getRawData(inputfolder, sud = True, minnonzero = 60):
         'distance-cfc':'/cfc-dist.tsv',
         'distribution':'/f.tsv',
         'treeHeight': '/height.tsv',
+        'freq-cfc':'/cfc.tsv'
         }.items():
         print(inputfolder+fi)
         dfs[ty] = pd.read_csv(inputfolder+fi,
@@ -156,8 +157,10 @@ def setScheme(sche):
 
 
 def gettypes():
-    print(11111,list(dfs.keys()) )
-    return list(dfs.keys())
+    #print(11111,list(dfs.keys()) )
+    types = list(dfs.keys())
+    types.remove('freq-cfc')
+    return types
 
 
 def getoptions(ty):
@@ -268,6 +271,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     codf = pd.concat(axdf, axis=1)
 
     #set min occurence of functions in treebank
+    freqMax = []
     for d in range(dim):
         #menzerath
         if 'nb_'+ax[d] in ax:
@@ -277,11 +281,19 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
                 #if nb_ in dfs[axtype of given dim] and havn't been added before
                 codf = pd.concat([codf, dfs[axtypes[d]][['nb_'+ ax[d]]]], axis = 1)
                 codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]] 
-        # #others
-        # if axtypes[d] in ['distance','distance-abs','direction'] and 'nb_'+ax[d] not in codf.keys():
-        #     fre = dfs['distribution'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
-        #     codf = pd.concat([codf, fre], axis = 1)
-        #     codf = codf[codf['nb_'+ax[d]] >= axminocc[d]]
+        #others
+        if axtypes[d] in ['distance','distance-abs','direction','distribution'] and 'nb_'+ax[d] not in codf.keys():
+            fre = dfs['distribution'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
+            freq = fre*dfs['distribution'][['total']].rename(columns={'total':'nb_'+ax[d]})
+            codf = pd.concat([codf,freq], axis = 1)
+            codf = codf[codf['nb_'+ax[d]] >= axminocc[d]]
+            freqMax.append(freq.max())
+        if axtypes[d] in ['distance-cfc','direction-cfc'] and 'nb_'+ax[d] not in codf.keys():
+            fre = dfs['freq-cfc'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
+            freq = fre*dfs['freq-cfc'][['total']].rename(columns={'total':'nb_'+ax[d]})
+            codf = pd.concat([codf,freq], axis = 1)
+            codf = codf[codf['nb_'+ax[d]] >= axminocc[d]]
+            freqMax.append(freq.max())
 
 
     jsos=[]    
@@ -330,10 +342,8 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
         print('number languages:',nbLang)
 
     #idxMax = np.argmax(codf[x].values)
-    #xlimMax =  math.ceil(codf[x].iloc[idxMax] + len(codf[[x]].iloc[idxMax].name))
-    xlimMax = math.ceil(np.nanmax(codf[[ax[0]]].values))
+    #xlimMax = math.ceil(np.nanmax(codf[[ax[0]]].values))
     xlimMin = np.nanmin(codf[[ax[0]]].values) #math.ceil(np.nanmin(codf[[ax[0]]].values))
-    #print("\nxmin =", xlimMin, "max = ", xlimMax)
 
     mi, ma = np.nanmin(codf[ax].values), np.nanmax(codf[ax].values) #ax = [x,y] if dim = 2
     
@@ -343,7 +353,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     elif (ma-mi) < 600: divi = 50
     else: divi=100
     # print(444444444, mi, ma, divi, ma-((ma-.1) % divi)+divi)
-    return j, nbLang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax, xlimMin
+    return j, nbLang, mi-(mi % divi), ma-((ma-.1) % divi)+divi, xlimMin
 
 if __name__ == '__main__':
     res = tsv2json('distance',x='subj',xminocc = 0,yty='direction',y='comp:obj',yminocc = 0)

@@ -87,15 +87,20 @@ def myClosestGraph(typ,ax, version, dim):
     rowsJs = getRows(name, distVersion,dim = dim, version = version)
 
     #find the type and option of the most similar graph 
+    typ,opt = graphParam(grs[0],dim = dim)
+    return typ,opt,ds[0], rowsJs
+    
+def graphParam(grname, dim):
+    #find the type and option of the most similar graph 
     if(dim == 1):
-        n = grs[0].split(':')
+        n = grname.split(':')
         typ,opt = [n[0]], [':'.join(n[1:])]
     else:#dim ==2
-        x,y = grs[0].split('::')
+        x,y = grname.split('::')
         nx = x.split(':')
         ny = y.split(':')
         typ,opt = [nx[0],ny[0]], [':'.join(nx[1:]), ':'.join(ny[1:]) ]
-    return typ,opt,ds[0], rowsJs
+    return typ,opt
 
 
 def getRows(graphName, distVersion, dim, version='dep'):
@@ -105,23 +110,8 @@ def getRows(graphName, distVersion, dim, version='dep'):
     for index, row in rowsDf.iterrows():
         if str(row.iloc[0]) not in ['nan','inf']:
             rows.append({"name":index, "distance":row.iloc[0]})
-    return rows   
-    #     rows+=['''
-    #         {{
-    #             "name":"{grname}",
-    #             "distance": {dist}
-    #             }}
-    #     '''.format(
-    #         grname=index,
-    #         dist=row.iloc[0], 
-    #         ) ]
-   
-    # jso='[ \n'+', '.join(rows)+']'
-    # #print(jso)
-    # #print(jso,"\n \n")
-    # j=json.loads(jso)
-    # return j
-
+    return sorted(rows, key=lambda x: x['distance'])
+    
 
 if __name__ == '__main__':
     typ0,ax0, grdist, jsrow= myClosestGraph(['distance'],['comp:obj'], version = 'dep',dim =1)

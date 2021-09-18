@@ -9,5 +9,6 @@ urlpatterns = [
 	path('types/', views.types),
 	path('scheme/', views.changeScheme),
 	path('graph/',views.getCloseGraph),
+	path('graphParam/', views.getGraphParam),
 	url(r'^api-auth/', include('rest_framework.urls'))
 ]
