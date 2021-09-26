@@ -281,19 +281,21 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
                 #if nb_ in dfs[axtype of given dim] and havn't been added before
                 codf = pd.concat([codf, dfs[axtypes[d]][['nb_'+ ax[d]]]], axis = 1)
                 codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]] 
+        if axtypes[d] == 'menzerath':
+            freqMax.append(int(codf['nb_'+ ax[d]].median()))
         #others
         if axtypes[d] in ['distance','distance-abs','direction','distribution'] and 'nb_'+ax[d] not in codf.keys():
             fre = dfs['distribution'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
             freq = fre*dfs['distribution'][['total']].rename(columns={'total':'nb_'+ax[d]})
             codf = pd.concat([codf,freq], axis = 1)
             codf = codf[codf['nb_'+ax[d]] >= axminocc[d]]
-            freqMax.append(freq.max())
+            freqMax.append(int(freq.median().loc['nb_'+ax[d]]))
         if axtypes[d] in ['distance-cfc','direction-cfc'] and 'nb_'+ax[d] not in codf.keys():
             fre = dfs['freq-cfc'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
             freq = fre*dfs['freq-cfc'][['total']].rename(columns={'total':'nb_'+ax[d]})
             codf = pd.concat([codf,freq], axis = 1)
             codf = codf[codf['nb_'+ax[d]] >= axminocc[d]]
-            freqMax.append(freq.max())
+            freqMax.append(int(freq.median().loc['nb_'+ax[d]]))
 
 
     jsos=[]    
@@ -340,6 +342,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     if verbose:
         #print('!!!!!!!!!!!!!', axtypes, ax, axminocc)
         print('number languages:',nbLang)
+        print('occ max', freqMax)
 
     #idxMax = np.argmax(codf[x].values)
     #xlimMax = math.ceil(np.nanmax(codf[[ax[0]]].values))
@@ -353,7 +356,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     elif (ma-mi) < 600: divi = 50
     else: divi=100
     # print(444444444, mi, ma, divi, ma-((ma-.1) % divi)+divi)
-    return j, nbLang, mi-(mi % divi), ma-((ma-.1) % divi)+divi, xlimMin
+    return j, nbLang, mi-(mi % divi), ma-((ma-.1) % divi)+divi, xlimMin,freqMax
 
 if __name__ == '__main__':
     res = tsv2json('distance',x='subj',xminocc = 0,yty='direction',y='comp:obj',yminocc = 0)
