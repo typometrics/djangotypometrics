@@ -274,9 +274,15 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     freqMax = []
     for d in range(dim):
         #menzerath
-        if 'nb_'+ax[d] in ax:
-            codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]]
+        print("====================\n",ax[d], "-----------",ax)
+        if ax[d][:3] == 'nb_':
+            codf = codf[codf[ax[d]] >= axminocc[d]]
+            freqMax.append(int(codf[ax[d]].median()))
+            continue
         else:
+            if 'nb_'+ax[d] in ax:
+                codf = codf[codf['nb_'+ ax[d]] >= axminocc[d]]
+
             if 'nb_'+ax[d] in dfs[axtypes[d]].columns.values.tolist() and ax[d] not in ax[:d]: 
                 #if nb_ in dfs[axtype of given dim] and havn't been added before
                 codf = pd.concat([codf, dfs[axtypes[d]][['nb_'+ ax[d]]]], axis = 1)

@@ -109,7 +109,11 @@ def getRows(graphName, distVersion, dim, version='dep'):
     
     for index, row in rowsDf.iterrows():
         if str(row.iloc[0]) not in ['nan','inf']:
-            rows.append({"name":index, "distance":row.iloc[0]})
+            #code to shorten graph name in the table, remove them when re compute the data with the good(short) graph name
+            ax0,ax1 = index.split('::')
+            keep_ax1 = ax1.split(':')
+            rows.append({"name":ax0+'::'+':'.join(keep_ax1[1:]), "distance":round(row.iloc[0],6)})
+            #rows.append({'name':index, "distance": row.iloc[0]}) #use this line when re computed the data
     return sorted(rows, key=lambda x: x['distance'])
     
 
