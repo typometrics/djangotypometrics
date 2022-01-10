@@ -92,14 +92,21 @@ def myClosestGraph(typ,ax, version, dim):
     
 def graphParam(grname, dim):
     #find the type and option of the most similar graph 
-    if(dim == 1):
+    print("hello graphParam\n!!!!!!!!!!!!!!!!!!!",grname,"\n\n")
+    split_name =  grname.split('::')
+    if len(split_name) == 1: #dim == 1 or graphe diagonal
         n = grname.split(':')
         typ,opt = [n[0]], [':'.join(n[1:])]
-    else:#dim ==2
-        x,y = grname.split('::')
-        nx = x.split(':')
-        ny = y.split(':')
-        typ,opt = [nx[0],ny[0]], [':'.join(nx[1:]), ':'.join(ny[1:]) ]
+    else:#dim == 2, 
+        #pour distribution, name format: distriution:g1_opt::g2_opt, or distriution:g1_opt::distribution:g2_opt
+        #a naive method to fix name format incoherence bug, to improve after
+        nx = split_name[0].split(':')
+        ny = split_name[1].split(':')
+        if ny[0] == "distribution":
+            typ,opt = [nx[0],ny[0]], [':'.join(nx[1:]), ':'.join(ny[1:]) ]
+        else:
+            typ,opt = [nx[0],nx[0]], [':'.join(nx[1:]), split_name[1] ]
+        print("======",typ,opt)
     return typ,opt
 
 
