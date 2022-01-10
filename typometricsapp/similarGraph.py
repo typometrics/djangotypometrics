@@ -17,24 +17,24 @@ dictUD = {1:{'dep':{},'dtw':{},'marry':{}},
 for group in typeGroups:
     for typ in ['Dep','DTW','Marry']:
         fl = "dist"+typ+"_sud1d_"+group+".tsv"
-        dictGroup =  pd.read_csv("~/typometrics/djangotypometrics/clustering/dist1D/"+group+'/'+fl,sep = '\t',index_col = 0)
+        dictGroup =  pd.read_csv("clustering/dist1D/"+group+'/'+fl,sep = '\t',index_col = 0)
         dictSUD[1][typ.lower()][group] = dictGroup
 
 #UD
 for group in typeGroups:
     for typ in ['Dep','DTW','Marry']:
         fl = "dist"+typ+"_ud1d_"+group+".tsv"
-        dictGroup =  pd.read_csv("~/typometrics/djangotypometrics/clustering/dist1D/"+group+'/'+fl,sep = '\t',index_col = 0)
+        dictGroup =  pd.read_csv("clustering/dist1D/"+group+'/'+fl,sep = '\t',index_col = 0)
         dictUD[1][typ.lower()][group] = dictGroup
 
 #2D graph, group = distribution        
 for typ in ['Dep','DTW','Marry']:
     fl = "dist"+typ+"_sud2d_"+"distribution"+".tsv"
-    dictGroup =  pd.read_csv("~/typometrics/djangotypometrics/clustering/dist2D/"+'distribution'+'/'+fl,sep = '\t',index_col = 0)
+    dictGroup =  pd.read_csv("clustering/dist2D/"+'distribution'+'/'+fl,sep = '\t',index_col = 0)
     dictSUD[2][typ.lower()]['distribution'] = dictGroup
 
     fl1 = "dist"+typ+"_ud2d_"+"distribution"+".tsv"
-    dictGroup =  pd.read_csv("~/typometrics/djangotypometrics/clustering/dist2D/"+'distribution'+'/'+fl1,sep = '\t',index_col = 0)
+    dictGroup =  pd.read_csv("clustering/dist2D/"+'distribution'+'/'+fl1,sep = '\t',index_col = 0)
     dictUD[2][typ.lower()]['distribution'] = dictGroup
 
 
