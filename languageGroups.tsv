@@ -1,6 +1,7 @@
 Amharic	Afroasiatic
 Coptic	Afroasiatic
 Beja	Afroasiatic
+Zaar	Afroasiatic
 Buryat	Agglutinating
 Erzya	Agglutinating
 Estonian	Agglutinating
@@ -8,6 +9,11 @@ Finnish	Agglutinating
 Hungarian	Agglutinating
 Japanese	Agglutinating
 Karelian	Agglutinating
+Karo (Brazil)	Tupian
+Kazakh	Agglutinating
+Komi	Agglutinating
+Komi-Permyak	Agglutinating
+Central Siberian Yupik	Eskimo
 Kazakh	Agglutinating
 Komi	Agglutinating
 Komi-Permyak	Agglutinating
@@ -21,6 +27,16 @@ Uyghur	Agglutinating
 TurkishGerman	Agglutinating
 OldTurkish	Agglutinating
 Chukot	Agglutinating
+Yakut	Agglutinating
+Tatar	Agglutinating
+Apurinã	Arawakan
+Tamil	Dravidian
+Telugu	Dravidian
+Malayalam	Dravidian
+Albanian	Indo-European
+AncientGreek	Indo-European
+Armenian	Indo-European
+Western Armenian	Indo-European
 Apurinã	Arawakan
 Tamil	Dravidian
 Telugu	Dravidian
@@ -34,6 +50,7 @@ Gaelic	Indo-European
 Greek	Indo-European
 Hindi	Indo-European
 HindiEnglish	Indo-European
+Bengali	Indo-European
 Irish	Indo-European
 Kurmanji	Indo-European
 Marathi	Indo-European
@@ -46,8 +63,13 @@ Nayini	Indo-European
 Soi	Indo-European
 Khunsari	Indo-European
 WesternArmenian	Indo-European
+Ligurian	Indo-European
 FrisianDutch	Indo-European
 Kangri	Indo-European
+Gheg	Indo-European
+Hittite	Indo-European
+Sinhalese	Indo-European
+Umbrian	Indo-European
 Belarusian	Indo-European-Baltoslavic
 Bulgarian	Indo-European-Baltoslavic
 Croatian	Indo-European-Baltoslavic
@@ -63,12 +85,17 @@ Slovak	Indo-European-Baltoslavic
 Slovenian	Indo-European-Baltoslavic
 Ukrainian	Indo-European-Baltoslavic
 UpperSorbian	Indo-European-Baltoslavic
+Pomak	Indo-European-Baltoslavic
 Afrikaans	Indo-European-Germanic
 Danish	Indo-European-Germanic
 Dutch	Indo-European-Germanic
 English	Indo-European-Germanic
 Faroese	Indo-European-Germanic
 German	Indo-European-Germanic
+Low German	Indo-European-Germanic
+Gothic	Indo-European-Germanic
+Icelandic	Indo-European-Germanic
+Frisian	Indo-European-Germanic
 Gothic	Indo-European-Germanic
 Icelandic	Indo-European-Germanic
 Naija	Indo-European-Germanic
@@ -86,6 +113,9 @@ OldFrench	Indo-European-Romance
 Portuguese	Indo-European-Romance
 Romanian	Indo-European-Romance
 Spanish	Indo-European-Romance
+Neapolitan	Indo-European-Romance
+Basque	isolate
+Warlpiri	Pama–Nyungan
 Basque	isolate
 Warlpiri	Pama–Nyungan
 K'iche'	Mayan
@@ -96,6 +126,7 @@ Akkadian	Semitic
 Arabic	Semitic
 Assyrian	Semitic
 Hebrew	Semitic
+AncientHebrew	Semitic
 Maltese	Semitic
 SouthLevantineArabic	Semitic
 Cantonese	Sino-Austronesian
@@ -105,10 +136,24 @@ Indonesian	Sino-Austronesian
 Tagalog	Sino-Austronesian
 Thai	Sino-Austronesian
 Vietnamese	Sino-Austronesian
+Javanese	Sino-Austronesian
 MbyáGuaraní	Tupian
 Mundurukú	Tupian
 Tupinambá	Tupian
 Akuntsu	Tupian
 Guajajára	Tupian
 Makuráp	Tupian
-Urubú	Tupian
+Urubú-Kaapor	Tupian
+K'iche'	Mayan
+Xibe	Tungusic
+UrubúKaapor	Tupian
+Karo	Tupian
+Emerillon	Tupian
+Guarani	Tupian
+Nhengatu	Tupian
+Iban	Austronesian
+Cebuano	Austronesian
+Abaza	NorthwestCaucasian
+Jamamadí	Arawan
+Nahuatl	Nahuan
+Xavánte	Macro-Jê

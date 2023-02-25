@@ -3,8 +3,10 @@ import math
 import pandas as pd 
 import numpy as np
 
-sudFolder = 'sud-treebanks-v2.8-analysis'
-udFolder = 'ud-treebanks-v2.8-analysis'
+
+version_corpus = '2.11'
+sudFolder = f'sud-treebanks-v{version_corpus}-analysis'
+udFolder = f'ud-treebanks-v{version_corpus}-analysis'
 #anafolder = sudFolder
 
 
@@ -13,6 +15,7 @@ groupColors={
     'Indo-European-Baltoslavic':'purple',
     'Indo-European-Germanic':'olive',
     'Indo-European':'royalBlue',
+    'Austronesian': 'limeGreen', # or another color
     'Sino-Austronesian':'limeGreen',  #7 lang
     'Agglutinating':'red', 
     'Semitic':'orange', #semitic is a branch of afroasiatic 6 lang
@@ -20,11 +23,16 @@ groupColors={
     'Niger-Congo':'black', #3 lang
     'Tupian':'cadetBlue',  #'olive', #7 lang
     'Arawakan': 'black',#1 lang
+    'Arawan':'black', # 1langugae
     'Mayan':'black', # 1 lang
     'Dravidian':'black',#2 lang
     'isolate':'black', #1 lang
     'Pama–Nyungan':'black',#'cyan', 1 lang
-    'Eskimo–Aleut':'black'#'cyan', 1 lang
+    'Eskimo–Aleut':'black',#'cyan', 1 lang
+    'Tungusic': 'black', # 1 lang
+    'NorthwestCaucasian':'black', # 1 lang
+    'Nahuan': 'black', # 1 lang
+    'Macro-Jê': 'black', # 1 lang
     }
 # groupMarkers={'Indo-European-Romance':'<','Indo-European-Baltoslavic':'^','Indo-European-Germanic':'v','Indo-European':'>','Sino-Austronesian':'s', 'Agglutinating':'+'}
 groupMarkers={
@@ -32,6 +40,7 @@ groupMarkers={
     'Indo-European-Baltoslavic':'triangle',
     'Indo-European-Germanic':'triangle',
     'Indo-European':'triangle',
+    'Austronesian': 'star', # or another one?
     'Sino-Austronesian':'star',
     'Agglutinating':'cross', 
     'Semitic':'crossRot',
@@ -39,11 +48,16 @@ groupMarkers={
     'Niger-Congo':'circle', #'rect',
     'Tupian':'star', 
     'Arawakan': 'circle', #'rectRounded',
+    'Arawan': 'circle',
     'Mayan': 'circle', #'rectRounded', 
     'Dravidian': 'circle', #'rectRot',
     'isolate':'circle',
     'Pama–Nyungan':'circle',
     'Eskimo–Aleut':'circle', 
+    'Tungusic': 'circle',
+    'NorthwestCaucasian':'circle',
+    'Nahuan':'circle',
+    'Macro-Jê': 'circle'
     }
 
 langNames={}
@@ -61,72 +75,70 @@ langNames = dict(langNames, **mylangNames)
 langnameGroup={li.split('\t')[0]:li.split('\t')[1] for li in open('languageGroups.tsv').read().strip().split('\n')  }
 
 dfs = {}
-"""
-minnonzero = 50
 
-for ty,fi in {
-    'menzerath': '/abc.languages.v2.8_sud_typometricsformat.tsv',
-    'direction': '/positive-direction.tsv',
-    'direction-cfc':'/posdircfc.tsv',
-    'distance': '/f-dist.tsv',
-    'distance-cfc':'/cfc-dist.tsv',
-    'treeHeight': '/height.tsv',
-    'distribution':'/f.tsv'
-    }.items():
-    print(anafolder+fi)
-    dfs[ty] = pd.read_csv(anafolder+fi,
-            sep='\t',
-            index_col=['name'])
 
-    goodcols = [name for name, values in dfs[ty].astype(bool).sum(axis=0).iteritems() if values>= minnonzero]
-    dfs[ty] = dfs[ty][goodcols]
-
-    
-#print(dfs['distance'])
-#print(dfs['distance'].head() )
-
-# cfc:
-df = pd.read_csv(anafolder+'/cfc.tsv',
-            sep='\t',
-            index_col=['name'])
-goodcols = [name for name, values in df.astype(bool).sum(axis=0).iteritems() if values>minnonzero]
-
-#dfs['direction-cfc']=pd.read_csv(anafolder+'/posdircfc.tsv',
-#            sep='\t',
-#            index_col=['name'],)#[goodcols]
-# print('nr columns:',len(dfs['direction-cfc'].columns)) #df[column])
-
-"""
-
-def getRawData(inputfolder, sud = True, minnonzero = 60):
+def getRawData(inputfolder, sud = True, minnonzero = 5):
     print("\ncurrent analysis folder: ", inputfolder)
 
     dfs={}
-    version = 'sud' if sud else 'ud'
+    scheme = 'sud' if sud else 'ud'
 
-    for ty,fi in {
-        'menzerath': '/abc.languages.v2.8_{}_typometricsformat.tsv'.format(version),
-        'direction': '/positive-direction.tsv',
-        'direction-cfc':'/posdircfc.tsv',
+    cfc_fn = '/direction-cfc_extend.tsv' if sud else '/posdircfc.tsv'
+    cfc_freq_fn = '/distribution-cfc_extend.tsv' if sud else '/cfc.tsv'
+    dict_data_ud = {
+        'menzerath': '/abc.languages.v{}_{}_typometricsformat.tsv'.format(version_corpus, scheme),
+        'direction': '/positive-direction.tsv', # change direction as head-initiality ?
+        'direction-cfc':cfc_fn ,
         'distance': '/f-dist.tsv',
         'distance-abs':'/f-dist-abs.tsv',
         'distance-cfc':'/cfc-dist.tsv',
         'distribution':'/f.tsv',
         'treeHeight': '/height.tsv',
-        'freq-cfc':'/cfc.tsv'
-        }.items():
+        'freq-cfc': cfc_freq_fn
+    }
+        # 'LAS_trankit': '/boot_LAS_t.tsv',
+        # 'UAS_trankit': '/boot_UAS_t.tsv',
+        # 'UPOS_trankit': '/boot_UPOS_t.tsv',
+        # 'LAS_udify': '/boot_LAS_u.tsv',
+        # 'UAS_udify': '/boot_UAS_u.tsv',
+        # 'UPOS_udify': '/boot_UPOS_u.tsv',
+    boot_dict = {
+        'ttr':'/boot_ttr.tsv',
+        'percent_func':'/boot_percent_fct.tsv',
+        'LAS': '/boot_LAS_mean.tsv',
+        'UAS': '/boot_UAS_mean.tsv',
+        'UPOS': '/boot_UPOS_mean.tsv'
+    }
+    # 5 relation: comp, mod, udep, subj, dislocated 
+    # by construction instead of by language, cannot be shown by current typometrics site
+    # 'freq_sample':'/freqSample.tsv',
+    # 'head_initial_weight':'/head_initial_weight.tsv',
+    # 'head_final_weight':'/head_final_weight.tsv',
+    flex_dict = {
+        'head-initiality':'/head_initiality.tsv',
+        'flexibility':'/flexibility_rel.tsv',
+        'flexibility-cfc':'/flexibility_cfc_all.tsv',
+        'flex_compare_Bakker':'/bak_vs_typo.tsv'
+    }
+    dict_data_sud = dict_data_ud.copy()
+    # dict_data_sud.update(boot_dict)
+    dict_data_sud.update(flex_dict)
+
+    dict_data = dict_data_sud if sud else dict_data_ud
+
+    for ty,fi in dict_data.items():
         print(inputfolder+fi)
         dfs[ty] = pd.read_csv(inputfolder+fi,
                 sep='\t',
-                index_col=['name'])
+                index_col= 0)# ['name'])
         #remove nan
         notNanCols = (dfs[ty] == dfs[ty])
-        goodcols = [name for name, values in  notNanCols.astype(bool).sum(axis=0).iteritems() if values>= minnonzero]#for nan
+        goodcols = [name for name, values in  notNanCols.astype(bool).sum(axis=0).items() if values>= minnonzero]#for nan
         print(len(goodcols))
         dfs[ty] = dfs[ty][goodcols]
-
+        
         if ty == 'menzerath':
-            goodcols = [name for name, values in  dfs[ty].astype(bool).sum(axis=0).iteritems() if values>= minnonzero]#for 0
+            goodcols = [name for name, values in  dfs[ty].astype(bool).sum(axis=0).items() if values>= minnonzero]#for 0
             print(len(goodcols))
             dfs[ty] = dfs[ty][goodcols]
     
@@ -169,84 +181,7 @@ def getoptions(ty):
     if ty == 'menzerath':
     	return sorted(list(dfs[ty].head()))
     return list(dfs[ty].head())
-"""
-def tsv2json(xty, x, xminocc, yty, y, yminocc, verbose = True):
-    #print("anafolder ", anafolder)
-    if verbose:
-        print('!!!!!!!!!!!!!', xty, x, xminocc, yty, y, yminocc)
-        print('number languages:',len(dfs[xty]), len(dfs[yty]))
-    #if xty==yty: codf = dfs[xty]
-    #else: codf = pd.concat([dfs[xty], dfs[yty]], axis=1)
-    xdf = dfs[xty][[x]]
-    ydf = dfs[yty][[y]]
-    codf = pd.concat([xdf, ydf], axis=1)
 
-
-    if 'nb_'+x in dfs[xty].columns.values.tolist(): 
-        #print("x before concat\n", codf)
-
-        codf = pd.concat([codf,dfs[xty][['nb_'+x]]], axis = 1)
-        #print("added nb_", x,"\n",codf)
-        codf = codf[codf['nb_'+x] >= xminocc] 
-    if 'nb_'+y in dfs[yty].columns.values.tolist() and x != y : 
-        #print("y != x, before concat\n", codf)
-        
-        codf = pd.concat([codf,dfs[yty][['nb_'+y]]], axis = 1)
-        #print("added nb_", y,"\n",codf)
-        codf = codf[codf['nb_'+y] >= yminocc]
-
-    nblang = len(codf)
-    jsos=[]
-    
-    for index, row in codf.iterrows():
-        # print(groupColors)
-        # print('***',index,'!!!',row)
-        # print('***', index, '!!!', row[x], row[y])
-        
-        if str(row.iloc[0]) == 'nan': row.iloc[0] = 0
-        if str(row.iloc[1]) == 'nan': row.iloc[1] = 0
-       
-        jsos+=['''
-            {{
-                    "label":["{index}/{group}"],
-                    "backgroundColor": "{color}",
-                    "borderColor": "{color}",
-                    "pointStyle": "{style}",                    
-                    "data": [{{
-                        "x": {rx},
-                        "y": {ry},
-                        "r": 5,
-                        "label": "{index}"
-                    }}]
-                }}
-        '''.format(
-            index=index,
-            rx=row.iloc[0],  # [x],
-            ry=row.iloc[1],  # [y],
-            color= groupColors[langnameGroup[index]], 
-            style=groupMarkers[langnameGroup[index]],
-            group=langnameGroup[index]
-            ) ]
-   
-    jso='[ \n'+', '.join(jsos)+']'
-    #print(jso,"\n \n")
-    j=json.loads(jso)
-    #print(j)
-
-    #idxMax = np.argmax(codf[x].values)
-    #xlimMax =  math.ceil(codf[x].iloc[idxMax] + len(codf[[x]].iloc[idxMax].name))
-    xlimMax = math.ceil(np.nanmax(codf[[x]].values))+1
-
-    mi, ma = np.nanmin(codf[[x, y]].values), np.nanmax(codf[[x, y]].values)
-    
-    if (ma-mi)   < 10: divi = 1
-    elif (ma-mi) < 60: divi = 5
-    elif (ma-mi) < 120: divi = 10
-    elif (ma-mi) < 600: divi = 50
-    else: divi=100
-    # print(444444444, mi, ma, divi, ma-((ma-.1) % divi)+divi)
-    return j, nblang, mi-(mi % divi), ma-((ma-.1) % divi)+divi,xlimMax
-"""
 
 def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     """"
@@ -293,6 +228,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
         if axtypes[d] in ['distance','distance-abs','direction','distribution'] and 'nb_'+ax[d] not in codf.keys():
             fre = dfs['distribution'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
             freq = fre*dfs['distribution'][['total']].rename(columns={'total':'nb_'+ax[d]})
+ 
             codf = pd.concat([codf,freq], axis = 1)
             codf = codf[codf['nb_'+ax[d]] >= axminocc[d]]
             freqMax.append(int(freq.median().loc['nb_'+ax[d]]))
@@ -312,10 +248,10 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
             if str(row.iloc[d]) == 'nan':
                 remove = True
                 break
-
+        
         if remove:
             continue #skip this language point with value nan
-       
+
         jsos+=['''
             {{
                     "label":["{index}/{group}"],
@@ -341,7 +277,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
             ) ]
    
     jso='[ \n'+', '.join(jsos)+']'
-    #print(jso,"\n \n")
+    print(jso,"\n \n")
     j=json.loads(jso)
     #print(j)
     nbLang = len(j)
