@@ -277,7 +277,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
             ) ]
    
     jso='[ \n'+', '.join(jsos)+']'
-    print(jso,"\n \n")
+    # print(jso,"\n \n")
     j=json.loads(jso)
     #print(j)
     nbLang = len(j)
