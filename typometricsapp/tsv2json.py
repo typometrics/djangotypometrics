@@ -270,7 +270,7 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
         '''.format(
             index=index,
             rx=round(row.iloc[0],2) if dim>1 else 0,  # [x],
-            ry=round(row.iloc[1],2 if dim >1 else round(row.iloc[0],2), # [y],
+            ry=round(row.iloc[1],2) if dim >1 else round(row.iloc[0],2), # [y],
             rz= round(row.iloc[2],2) if dim == 3 else 0,
             color= groupColors[langnameGroup[index]], 
             style=groupMarkers[langnameGroup[index]],
