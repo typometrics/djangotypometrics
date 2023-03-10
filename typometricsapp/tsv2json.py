@@ -116,7 +116,7 @@ def getRawData(inputfolder, sud = True, minnonzero = 5):
     # 'head_initial_weight':'/head_initial_weight.tsv',
     # 'head_final_weight':'/head_final_weight.tsv',
     flex_dict = {
-        'head-initiality':'/head_initiality.tsv',
+        # 'head-initiality':'/head_initiality.tsv',
         'flexibility':'/flexibility_rel.tsv',
         'flexibility-cfc':'/flexibility_cfc_all.tsv',
         'flex_compare_Bakker':'/bak_vs_typo.tsv'
