@@ -85,7 +85,7 @@ def getRawData(inputfolder, sud = True, minnonzero = 5):
 
     cfc_fn = '/direction-cfc_extend.tsv' if sud else '/posdircfc.tsv'
     cfc_freq_fn = '/distribution-cfc_extend.tsv' if sud else '/cfc.tsv'
-    positive_direction_fn = '/positive-direction.tsv' if sud else '/positive-direction.tsv'
+    positive_direction_fn = '/head_initiality_comb.tsv' if sud else '/positive-direction.tsv'
     dict_data_ud = {
         'menzerath': '/abc.languages.v{}_{}_typometricsformat.tsv'.format(version_corpus, scheme),
         'head-initiality': positive_direction_fn, # change direction as head-initiality ?
@@ -226,14 +226,14 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
         if axtypes[d] == 'menzerath':
             freqMax.append(int(codf['nb_'+ ax[d]].median()))
         #others
-        if axtypes[d] in ['distance','distance-abs','direction','distribution'] and 'nb_'+ax[d] not in codf.keys():
+        if axtypes[d] in ['distance','distance-abs','head-intiality','distribution'] and 'nb_'+ax[d] not in codf.keys():
             fre = dfs['distribution'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
             freq = fre*dfs['distribution'][['total']].rename(columns={'total':'nb_'+ax[d]})
  
             codf = pd.concat([codf,freq], axis = 1)
             codf = codf[codf['nb_'+ax[d]] >= axminocc[d]]
             freqMax.append(int(freq.median().loc['nb_'+ax[d]]))
-        if axtypes[d] in ['distance-cfc','direction-cfc'] and 'nb_'+ax[d] not in codf.keys():
+        if axtypes[d] in ['distance-cfc','head-intiality-cfc'] and 'nb_'+ax[d] not in codf.keys():
             fre = dfs['freq-cfc'][[ax[d]]].rename(columns={ax[d]:'nb_'+ax[d]}) #distribution is percentage as float% but not occurence as int
             freq = fre*dfs['freq-cfc'][['total']].rename(columns={'total':'nb_'+ax[d]})
             codf = pd.concat([codf,freq], axis = 1)
@@ -302,4 +302,4 @@ def tsv2jsonNew(axtypes, ax, axminocc, dim, verbose = True):
     return j, nbLang, mi-(mi % divi), ma-((ma-.1) % divi)+divi, xlimMin,freqMax
 
 if __name__ == '__main__':
-    res = tsv2json('distance',x='subj',xminocc = 0,yty='direction',y='comp:obj',yminocc = 0)
+    res = tsv2json('distance',x='subj',xminocc = 0,yty='head-intiality',y='comp:obj',yminocc = 0)
