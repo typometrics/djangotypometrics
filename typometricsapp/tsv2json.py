@@ -85,10 +85,11 @@ def getRawData(inputfolder, sud = True, minnonzero = 5):
 
     cfc_fn = '/direction-cfc_extend.tsv' if sud else '/posdircfc.tsv'
     cfc_freq_fn = '/distribution-cfc_extend.tsv' if sud else '/cfc.tsv'
+    positive_direction_fn = '/positive-direction.tsv' if sud else '/positive-direction.tsv'
     dict_data_ud = {
         'menzerath': '/abc.languages.v{}_{}_typometricsformat.tsv'.format(version_corpus, scheme),
-        'direction': '/positive-direction.tsv', # change direction as head-initiality ?
-        'direction-cfc':cfc_fn ,
+        'head-initiality': positive_direction_fn, # change direction as head-initiality ?
+        'head-initiality-cfc':cfc_fn ,
         'distance': '/f-dist.tsv',
         'distance-abs':'/f-dist-abs.tsv',
         'distance-cfc':'/cfc-dist.tsv',
