@@ -65,6 +65,43 @@ def closestGr(distData, n = 10):
 
 
 def myClosestGraph(typ,ax, version, dim):
+    """
+    TODO: remove this and use the old_myClosestGraph version after updating the data!! 
+    with direction renamed to head-initiality
+    """
+    #type(typ) == type(ax) ==list , typ != treeheight
+    print(version)
+    if typ[0] == 'treeHeight':  return typ,ax,0.
+    if version not in ['dep', 'dtw','marry']:   return 
+
+    # direction renamed as head-initiality, apply this before updating data
+    typ0 = 'direction' if typ[0] in ['head-initiality', 'head-initiality-cfc'] else typ[0]
+
+    distVersion = typ0 if typ0 in typeGroups else typ0[:-4] #len(-cfc)==len(-abs) == 4
+
+    name = ':'.join([typ0,ax[0]]) if typ[0] != 'head-initiality-cfc' else ':'.join(['direction-cfc',ax[0]])
+    if dim ==2:
+        typ1 = 'direction' if typ[0] in ['head-initiality', 'head-initiality-cfc'] else typ[0]
+
+        if typ0==typ1 and ax[0]==ax[1]:#if graph is diagonal
+            grs, ds = closestGr(distDict[1][version][distVersion].loc[name], n = 1)
+            rowsJs = getRows(name, distVersion,dim = 1, version = version)
+            n = grs[0].split(':')
+            return [n[0], n[0]],[':'.join(n[1:]), ':'.join(n[1:]) ],ds[0], rowsJs
+        else:
+            name = "::".join([name,':'.join([typ1,ax[1]])])    
+    
+    grs, ds = closestGr(distDict[dim][version][distVersion].loc[name], n = 1)
+    rowsJs = getRows(name, distVersion,dim = dim, version = version)
+
+    #find the type and option of the most similar graph 
+    typ,opt = graphParam(grs[0],dim = dim)
+
+    typ[0] = 'head-initiality' if typ[0] == 'direction' else typ[0]
+    typ[0] = 'head-initiality-cfc' if typ[0] == 'direction-cfc' else typ[0]
+    return typ,opt,ds[0], rowsJs
+
+def old_myClosestGraph(typ,ax, version, dim):
     #type(typ) == type(ax) ==list , typ != treeheight
     print(version)
     if typ[0] == 'treeHeight':  return typ,ax,0.
@@ -138,3 +175,4 @@ if __name__ == '__main__':
     print("closest gr dep", grs,"\n",ds)
 
     
+
